@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.jena</groupId>
     <artifactId>jena</artifactId>
-    <version>4.2.0-SNAPSHOT</version>
+    <version>jena-4.2.0-dev-fork</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -40,14 +40,14 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-core</artifactId>
-      <version>4.2.0-SNAPSHOT</version>
+      <version>jena-4.2.0-dev-fork</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-core</artifactId>
       <classifier>tests</classifier>
-      <version>4.2.0-SNAPSHOT</version>
+      <version>jena-4.2.0-dev-fork</version>
       <scope>test</scope>
     </dependency>
 
@@ -55,7 +55,7 @@
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-base</artifactId>
       <classifier>tests</classifier>
-      <version>4.2.0-SNAPSHOT</version>
+      <version>jena-4.2.0-dev-fork</version>
       <scope>test</scope>
     </dependency>
 

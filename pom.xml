@@ -19,7 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <name>Apache Jena</name>
-  <groupId>com.github.CristobalM</groupId>
+  <groupId>org.apache.jena</groupId>
   <artifactId>jena</artifactId>
   <packaging>pom</packaging>
   <url>https://jena.apache.org/</url>
