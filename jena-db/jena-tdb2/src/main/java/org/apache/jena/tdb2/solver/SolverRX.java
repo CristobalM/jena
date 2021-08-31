@@ -32,11 +32,13 @@ import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Substitute;
 import org.apache.jena.sparql.engine.ExecutionContext;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingFactory;
+import org.apache.jena.sparql.engine.main.CachingTriplesConnector;
 import org.apache.jena.sparql.engine.main.solver.SolverRX4;
 import org.apache.jena.tdb2.lib.TupleLib;
 import org.apache.jena.tdb2.store.NodeId;
@@ -95,8 +97,18 @@ public class SolverRX {
         Tuple<Node> patternTuple = ( g == null )
                 ? TupleFactory.create3(s,p,o)
                 : TupleFactory.create4(g,s,p,o);
+        
 
-        Iterator<Quad> dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
+        CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
+        
+        Iterator<Quad> dsgIter = null;
+        
+        if(!cachingTriplesConnector.canRetrieve(tPattern)) {
+            dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
+        }
+        else {
+        	dsgIter = cachingTriplesConnector.accessData(tPattern);
+        }
 
         Iterator<Binding> matched = Iter.iter(dsgIter).map(dQuad->SolverRX4.matchQuad(input, dQuad, tGraphNode, tPattern)).removeNulls();
         return convFromBinding(matched, nodeTable);

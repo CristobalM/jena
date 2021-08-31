@@ -20,6 +20,7 @@ package org.apache.jena.sparql.engine.main;
 
 import org.apache.jena.query.ARQ ;
 import org.apache.jena.query.Query ;
+import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.algebra.Algebra ;
 import org.apache.jena.sparql.algebra.Op ;
 import org.apache.jena.sparql.algebra.optimize.Optimize;
@@ -48,7 +49,13 @@ public class QueryEngineMain extends QueryEngineBase
     @Override
     public QueryIterator eval(Op op, DatasetGraph dsg, Binding input, Context context)
     {
+        CachingTriplesConnector cachingConnector = context.get(ARQConstants.symCachingTriples);
+        if(cachingConnector == null) {
+        	context.set(ARQConstants.symCachingTriples, new NoTriplesCaching());
+        }
+    	
         ExecutionContext execCxt = new ExecutionContext(context, dsg.getDefaultGraph(), dsg, QC.getFactory(context)) ;
+       
         QueryIterator qIter1 = 
             ( input.isEmpty() ) ? QueryIterRoot.create(execCxt) 
                                 : QueryIterRoot.create(input, execCxt);
