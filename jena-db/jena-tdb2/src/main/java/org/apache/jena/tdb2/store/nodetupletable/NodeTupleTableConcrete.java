@@ -26,6 +26,10 @@ import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.ARQConstants;
+import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.sparql.engine.main.CachingTriplesConnector;
 import org.apache.jena.tdb2.TDBException;
 import org.apache.jena.tdb2.lib.TupleLib;
 import org.apache.jena.tdb2.store.NodeId;
@@ -114,6 +118,7 @@ public class NodeTupleTableConcrete implements NodeTupleTable
     @Override
     public Iterator<Tuple<Node>> find(Node... nodes)
     {
+		
         try {
             startRead();
             Iterator<Tuple<NodeId>> iter1 = findAsNodeIds(nodes); // **public call

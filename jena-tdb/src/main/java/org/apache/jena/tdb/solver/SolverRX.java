@@ -99,17 +99,18 @@ public class SolverRX {
                 : TupleFactory.create4(g,s,p,o);
 
 
+
         CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
         
         Iterator<Quad> dsgIter = null;
-        
         if(!cachingTriplesConnector.canRetrieve(tPattern)) {
             dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
         }
         else {
-        	dsgIter = cachingTriplesConnector.accessData(tPattern);
+        	dsgIter = Iter.map(cachingTriplesConnector.accessData(tPattern), triple -> {
+        		return Quad.create(null, triple);
+        	});
         }
-
 
         Iterator<Binding> matched = Iter.iter(dsgIter).map(dQuad->SolverRX4.matchQuad(input, dQuad, tGraphNode, tPattern)).removeNulls();
         return convFromBinding(matched, nodeTable);

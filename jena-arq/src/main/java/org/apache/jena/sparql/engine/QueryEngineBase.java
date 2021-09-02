@@ -32,6 +32,8 @@ import org.apache.jena.sparql.core.DynamicDatasets;
 import org.apache.jena.sparql.core.Substitute ;
 import org.apache.jena.sparql.engine.binding.Binding ;
 import org.apache.jena.sparql.engine.binding.BindingRoot ;
+import org.apache.jena.sparql.engine.main.CachingTriplesConnector;
+import org.apache.jena.sparql.engine.main.NoTriplesCaching;
 import org.apache.jena.sparql.mgt.Explain ;
 import org.apache.jena.sparql.mgt.QueryEngineInfo ;
 import org.apache.jena.sparql.util.Context ;
@@ -125,6 +127,12 @@ public abstract class QueryEngineBase implements OpEval, Closeable
             // needed in the output.
         }
         op = modifyOp(op) ;
+        
+        CachingTriplesConnector cachingConnector = context.get(ARQConstants.symCachingTriples);
+        if(cachingConnector == null) {        	
+        	context.set(ARQConstants.symCachingTriples, new NoTriplesCaching());
+        }
+    	
 
         QueryIterator queryIterator = null ;
         if ( dataset != null )

@@ -49,11 +49,7 @@ public class QueryEngineMain extends QueryEngineBase
     @Override
     public QueryIterator eval(Op op, DatasetGraph dsg, Binding input, Context context)
     {
-        CachingTriplesConnector cachingConnector = context.get(ARQConstants.symCachingTriples);
-        if(cachingConnector == null) {
-        	context.set(ARQConstants.symCachingTriples, new NoTriplesCaching());
-        }
-    	
+        
         ExecutionContext execCxt = new ExecutionContext(context, dsg.getDefaultGraph(), dsg, QC.getFactory(context)) ;
        
         QueryIterator qIter1 = 

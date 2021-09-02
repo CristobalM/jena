@@ -28,8 +28,11 @@ import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ExecutionContext;
+import org.apache.jena.sparql.engine.main.CachingTriplesConnector;
 import org.apache.jena.tdb.store.NodeId;
 import org.apache.jena.tdb.store.nodetable.NodeTable;
 import org.apache.jena.tdb.store.nodetupletable.NodeTupleTable;
@@ -56,7 +59,15 @@ class StageMatchTuple {
             // Short cut - known unknown NodeId
             return Iter.nullIterator();
 
-        Iterator<Tuple<NodeId>> iterMatches = nodeTupleTable.find(TupleFactory.create(ids));
+
+        Iterator<Tuple<NodeId>> iterMatches;
+        if(cachingEnabled(execCxt)) {
+        	iterMatches = accessFromCaching(ids, patternTuple, nodeTupleTable.getNodeTable(), execCxt);
+        }
+        else {
+        	iterMatches = nodeTupleTable.find(TupleFactory.create(ids));	
+        }
+        
         if ( false ) {
             List<Tuple<NodeId>> x = Iter.toList(iterMatches);
             System.out.println(x);
@@ -94,7 +105,109 @@ class StageMatchTuple {
         return Iter.iter(iterMatches).map(binder).removeNulls();
     }
 
-    private static BindingNodeId tupleToBinding(BindingNodeId input, Tuple<NodeId> tuple, Var[] var) {
+
+    private static Iterator<Tuple<NodeId>> accessFromCaching(NodeId[] nodeIds, Tuple<Node> patternTuple, NodeTable nodeTable,
+			ExecutionContext execCxt) {
+    	CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
+        
+        Triple tPattern = patternFromTupleAndNodeId(patternTuple, nodeIds, nodeTable); // new Triple(patternTuple.get(0), patternTuple.get(1), patternTuple.get(2));
+
+        if(tPattern == null || !cachingTriplesConnector.canRetrieve(tPattern)) {
+        	return Iter.empty();
+        }
+        
+        Iterator<Triple> tripleMatches = cachingTriplesConnector.accessData(tPattern);
+        
+ 
+        
+        if(patternTuple.len() == 3)
+            return Iter.map(tripleMatches, triple -> {
+            	NodeId subjectId = nodeTable.getNodeIdForNode(triple.getSubject());
+            	NodeId predicateId = nodeTable.getNodeIdForNode(triple.getPredicate());
+            	NodeId objectId = nodeTable.getNodeIdForNode(triple.getObject());
+            	
+            	if(subjectId == NodeId.NodeDoesNotExist) {
+            		System.out.println("couldnt find " + triple.getSubject().toString());
+            	}
+
+            	if(predicateId == NodeId.NodeDoesNotExist) {
+            		System.out.println("couldnt find " + triple.getPredicate().toString());
+            	}
+            	
+
+            	if(objectId == NodeId.NodeDoesNotExist) {
+            		System.out.println("couldnt find " + triple.getObject().toString());
+            	}
+            	
+            	return TupleFactory.create3(
+            			subjectId,
+            			predicateId,
+            			objectId
+            			);
+            	
+            });
+        
+    	return Iter.map(tripleMatches, triple -> {
+    		NodeId subjectId = nodeTable.getNodeIdForNode(triple.getSubject());
+        	NodeId predicateId = nodeTable.getNodeIdForNode(triple.getPredicate());
+        	NodeId objectId = nodeTable.getNodeIdForNode(triple.getObject());
+        	if(subjectId == NodeId.NodeDoesNotExist) {
+        		System.out.println("couldnt find " + triple.getSubject().toString());
+        	}
+
+        	if(predicateId == NodeId.NodeDoesNotExist) {
+        		System.out.println("couldnt find " + triple.getPredicate().toString());
+        	}
+        	
+
+        	if(objectId == NodeId.NodeDoesNotExist) {
+        		System.out.println("couldnt find " + triple.getObject().toString());
+        	}
+        	
+        	return TupleFactory.create4(
+        			null,
+        			subjectId,
+        			predicateId,
+        			objectId
+        			);
+    	});
+    
+	}
+    
+    
+	private static Triple patternFromTupleAndNodeId(Tuple<Node> patternTuple, NodeId[] nodeIds, NodeTable nodeTable) {
+		assert patternTuple.len() == nodeIds.length;
+		assert patternTuple.len() == 3 || patternTuple.len() == 4;
+		Node subject= null;
+		Node predicate = null;
+		Node object = null;
+		
+		int starting = patternTuple.len() == 4 ? 1 : 0;
+		for(int i = starting; i < nodeIds.length; i++) {
+			int j = i-starting;
+			NodeId currNodeId = nodeIds[i];
+			Node currPatternNode = patternTuple.get(i);
+			Node nextNode;
+			if(currPatternNode.isVariable() && currNodeId != null) {
+				nextNode = nodeTable.getNodeForNodeId(currNodeId);
+			}
+			else {
+				nextNode = currPatternNode;
+			}
+			if(j == 0) subject = nextNode;
+			else if(j == 1) predicate = nextNode;
+			else object = nextNode;
+		}
+		return Triple.create(subject, predicate, object);
+	}
+
+
+	private static boolean cachingEnabled(ExecutionContext execCxt) {
+		CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
+    	return cachingTriplesConnector.isCaching();
+	}
+
+	private static BindingNodeId tupleToBinding(BindingNodeId input, Tuple<NodeId> tuple, Var[] var) {
         // Reuseable BindingNodeId builder?
         BindingNodeId output = new BindingNodeId(input);
         for ( int i = 0 ; i < var.length ; i++ ) {

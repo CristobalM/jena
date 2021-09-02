@@ -14,9 +14,15 @@ public class NoTriplesCaching implements CachingTriplesConnector {
 	}
 
 	@Override
-	public Iterator<Quad> accessData(Triple tPattern) {
+	public Iterator<Triple> accessData(Triple tPattern) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean isCaching() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

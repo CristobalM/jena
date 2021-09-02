@@ -9,6 +9,8 @@ public interface CachingTriplesConnector {
 
 	boolean canRetrieve(Triple tPattern);
 
-	Iterator<Quad> accessData(Triple tPattern);
+	Iterator<Triple> accessData(Triple tPattern);
+	
+	boolean isCaching();
 
 }

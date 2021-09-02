@@ -60,11 +60,12 @@ public class SolverRX {
     static Iterator<BindingNodeId> matchQuadPattern(Iterator<BindingNodeId> chain, Node graphNode, Triple tPattern,
                                                     NodeTupleTable nodeTupleTable, Tuple<Node> patternTuple,
                                                     boolean anyGraph, Predicate<Tuple<NodeId>> filter, ExecutionContext execCxt) {
-        if ( DATAPATH ) {
+    	if ( DATAPATH ) {
             if ( ! tripleHasEmbTripleWithVars(tPattern) )
                 // No RDF-star <<>> with variables.
                 return StageMatchTuple.access(nodeTupleTable, chain, patternTuple, filter, anyGraph, execCxt);
         }
+    	
 
         // RDF-star <<>> with variables.
         // This path should work regardless.
@@ -102,12 +103,13 @@ public class SolverRX {
         CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
         
         Iterator<Quad> dsgIter = null;
-        
         if(!cachingTriplesConnector.canRetrieve(tPattern)) {
             dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
         }
         else {
-        	dsgIter = cachingTriplesConnector.accessData(tPattern);
+        	dsgIter = Iter.map(cachingTriplesConnector.accessData(tPattern), triple -> {
+        		return Quad.create(null, triple);
+        	});
         }
 
         Iterator<Binding> matched = Iter.iter(dsgIter).map(dQuad->SolverRX4.matchQuad(input, dQuad, tGraphNode, tPattern)).removeNulls();
