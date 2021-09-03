@@ -60,11 +60,11 @@ class StageMatchTuple {
             return Iter.nullIterator();
         
         
-        Iterator<Tuple<NodeId>> iterMatches;
+        Iterator<Tuple<NodeId>> iterMatches = null;
         if(cachingEnabled(execCxt)) {
         	iterMatches = accessFromCaching(ids, patternTuple, nodeTupleTable.getNodeTable(), execCxt);
         }
-        else {
+        if(iterMatches == null) {
         	iterMatches = nodeTupleTable.find(TupleFactory.create(ids));	
         }
         
@@ -112,8 +112,8 @@ class StageMatchTuple {
         
         Triple tPattern = patternFromTupleAndNodeId(patternTuple, nodeIds, nodeTable); // new Triple(patternTuple.get(0), patternTuple.get(1), patternTuple.get(2));
 
-        if(tPattern == null || !cachingTriplesConnector.canRetrieve(tPattern)) {
-        	return Iter.empty();
+        if(!cachingTriplesConnector.canRetrieve(tPattern)) {
+        	return null;
         }
         
         Iterator<Triple> tripleMatches = cachingTriplesConnector.accessData(tPattern);
