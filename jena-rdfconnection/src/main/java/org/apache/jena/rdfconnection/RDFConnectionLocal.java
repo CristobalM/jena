@@ -28,13 +28,16 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.ARQException;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.DatasetGraphFactory;
 import org.apache.jena.sparql.core.DatasetGraphReadOnly;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.sparql.graph.GraphReadOnly;
 import org.apache.jena.system.Txn;
 import org.apache.jena.update.UpdateExecutionFactory;
+import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 
 /**
@@ -78,6 +81,16 @@ public class RDFConnectionLocal implements RDFConnection {
     public void update(UpdateRequest update) {
         checkOpen();
         Txn.executeWrite(dataset, ()->UpdateExecutionFactory.create(update, dataset).execute() ); 
+    }
+
+    @Override
+        public void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater) {
+        checkOpen();
+        Txn.executeWrite(dataset, ()->{
+            UpdateProcessor updateProcessor = UpdateExecutionFactory.create(updateRequest, dataset);
+            updateProcessor.getContext().set(ARQConstants.symCachingTriplesUpdater, cachingTriplesUpdater);
+            updateProcessor.execute();
+        });
     }
 
     @Override

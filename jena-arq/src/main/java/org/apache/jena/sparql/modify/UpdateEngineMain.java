@@ -21,8 +21,11 @@ package org.apache.jena.sparql.modify;
 import java.util.function.Consumer;
 
 import org.apache.jena.atlas.lib.Sink;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.DatasetGraph ;
 import org.apache.jena.sparql.engine.binding.Binding ;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.sparql.modify.request.UpdateVisitor ;
 import org.apache.jena.sparql.util.Context ;
 
@@ -69,13 +72,37 @@ public class UpdateEngineMain extends UpdateEngineBase
     @Override
     public UpdateSink getUpdateSink()
     {
-        if ( updateSink == null )
-            updateSink = new UpdateVisitorSink(this.prepareWorker(),
-                                               sink(q->datasetGraph.add(q)), 
-                                               sink(q->datasetGraph.delete(q)));
+        if ( updateSink == null ){
+            updateSink = createUpdateSink();
+        }
         return updateSink ;
     }
-    
+
+    private UpdateSink createUpdateSink() {
+        UpdateSink resultingUpdateSink;
+        Object cachingUpdaterObj = context.get(ARQConstants.symCachingTriplesUpdater);
+        if(cachingUpdaterObj != null){
+            CachingTriplesUpdater cachingUpdater = (CachingTriplesUpdater) cachingUpdaterObj;
+            resultingUpdateSink = new UpdateVisitorSink(this.prepareWorker(),
+                    sink(quad -> {
+                        datasetGraph.add(quad);
+                        cachingUpdater.addTriple(quad.asTriple());
+                    }),
+                    sink(quad -> {
+                        datasetGraph.delete(quad);
+                        cachingUpdater.deleteTriple(quad.asTriple());
+                    }));
+        }
+        else{
+            resultingUpdateSink = new UpdateVisitorSink(this.prepareWorker(),
+                    sink(q->datasetGraph.add(q)),
+                    sink(q->datasetGraph.delete(q)));
+        }
+
+
+        return resultingUpdateSink;
+    }
+
     /**
      * Creates the {@link UpdateVisitor} which will do the work of applying the updates
      * @return The update visitor to be used to apply the updates

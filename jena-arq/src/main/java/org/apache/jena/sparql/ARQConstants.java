@@ -235,7 +235,7 @@ public class ARQConstants
      *  The value of this key in a Context must be an object of type DatasetDescription.
      */
     public static final Symbol sysDatasetDescription    = Symbol.create(systemVarNS+"datasetDescription") ;
-    
+
 
     /** Context key for the algebra expression of the query execution after optimization */
     public static final Symbol sysCurrentAlgebra        = Symbol.create(systemVarNS+"algebra") ;
@@ -268,6 +268,8 @@ public class ARQConstants
     public static final Symbol symPrologue              = SystemARQ.allocSymbol("prologue");
 
     public static final Symbol symCachingTriples		= SystemARQ.allocSymbol("cachingTriples");
+    public static final Symbol symCachingTriplesUpdater  =
+            SystemARQ.allocSymbol("cachingTriplesUpdater");
 
     /**
      * Internal use context symbol for an AtomicBoolean to signal that a query has been cancelled.

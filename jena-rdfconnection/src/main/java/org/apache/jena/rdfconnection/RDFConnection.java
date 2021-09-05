@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sparql.core.Transactional;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.system.Txn;
 import org.apache.jena.update.Update;
 import org.apache.jena.update.UpdateFactory;
@@ -257,7 +258,19 @@ public interface RDFConnection extends
     @Override
     public void update(UpdateRequest update);
 
-    /** Execute a SPARQL Update.
+
+     /** Execute a SPARQL Update with caching updater.
+      *
+      * @param updateRequest
+      * @param cachingTriplesUpdater
+      */
+
+     public default void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater){
+         update(updateRequest);
+     }
+
+
+     /** Execute a SPARQL Update.
      *
      * @param updateString
      */
