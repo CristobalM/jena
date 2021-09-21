@@ -1,9 +1,9 @@
 package org.apache.jena.sparql.engine.main;
 
-import org.apache.jena.graph.Triple;
+import org.apache.jena.atlas.lib.tuple.Tuple;
 
 public interface CachingTriplesUpdater {
-    void addTriple(Triple triple);
+    void addTriple(Tuple<byte[]> triple);
 
-    void deleteTriple(Triple triple);
+    void deleteTriple(Tuple<byte[]> triple);
 }

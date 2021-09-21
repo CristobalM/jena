@@ -27,6 +27,8 @@ import org.apache.jena.dboe.sys.SysDB;
 import org.apache.jena.graph.Node;
 import org.apache.jena.tdb2.sys.SystemTDB;
 
+import java.nio.ByteBuffer;
+
 final
 public class NodeId implements Comparable<NodeId>
 {
@@ -81,6 +83,22 @@ public class NodeId implements Comparable<NodeId>
         this.type = type;
         value1 = v1;    // Zero for 64 bit.
         value2 = v2;
+    }
+
+    public byte[] toBytesArray(){
+        ByteBuffer byteBuffer = ByteBuffer.allocate(1 + Integer.BYTES + Long.BYTES);
+        byteBuffer.put((byte)type.type());
+        byteBuffer.putInt(value1);
+        byteBuffer.putLong(value2);
+        return byteBuffer.array();
+    }
+
+    public static NodeId fromBytesArray(byte[] inputBytesArray){
+        ByteBuffer byteBuffer = ByteBuffer.wrap(inputBytesArray);
+        NodeIdType nodeIdType = NodeIdType.intToEnum((int)byteBuffer.get());
+        int value1 = byteBuffer.getInt();
+        long value2 = byteBuffer.getLong();
+        return NodeId.createRaw(nodeIdType, value1, value2);
     }
 
     private final void check(NodeIdType type, int v1, long v2) {

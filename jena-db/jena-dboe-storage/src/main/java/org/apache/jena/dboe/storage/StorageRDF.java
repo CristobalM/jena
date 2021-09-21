@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import static org.apache.jena.atlas.iterator.Iter.*;
 import org.apache.jena.atlas.iterator.Iter;
+import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.dboe.storage.system.StorageLib;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
@@ -181,6 +182,13 @@ public interface StorageRDF {
      * <p>Pattern operation.
      */
     public Iterator<Triple> find(Node s, Node p, Node o);
+
+    /** Find in the default graph.
+     * <p>Pattern operation.
+     */
+    public default Iterator<Tuple<byte[]>> findIdsBytes(Node s, Node p, Node o){
+        return null;
+    }
 
     /** See {@link #findUnionGraph}.
      * <p>Pattern operation.

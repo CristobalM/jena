@@ -2,14 +2,13 @@ package org.apache.jena.sparql.engine.main;
 
 import java.util.Iterator;
 
-import org.apache.jena.graph.Triple;
-import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.atlas.lib.tuple.Tuple;
 
 public interface CachingTriplesConnector {
 
-	boolean canRetrieve(Triple tPattern);
+	boolean canRetrieve(Tuple<byte[]> tPattern);
 
-	Iterator<Triple> accessData(Triple tPattern);
+	Iterator<Tuple<byte[]>> accessData(Tuple<byte[]> tPattern);
 	
 	boolean isCaching();
 

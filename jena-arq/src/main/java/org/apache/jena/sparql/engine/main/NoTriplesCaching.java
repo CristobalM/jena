@@ -2,19 +2,18 @@ package org.apache.jena.sparql.engine.main;
 
 import java.util.Iterator;
 
-import org.apache.jena.graph.Triple;
-import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.atlas.lib.tuple.Tuple;
 
 public class NoTriplesCaching implements CachingTriplesConnector {
 
 	@Override
-	public boolean canRetrieve(Triple tPattern) {
+	public boolean canRetrieve(Tuple<byte[]> tPattern) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Iterator<Triple> accessData(Triple tPattern) {
+	public Iterator<Tuple<byte[]>> accessData(Tuple<byte[]> tPattern) {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -295,4 +295,9 @@ public class DatasetGraphWrapper implements DatasetGraph, Sync
     public boolean supportsTransactionAbort()
     { return getT().supportsTransactionAbort(); }
 
+    @Override
+    public byte[] convertToBytesArray(Node node) {
+        return getT().convertToBytesArray(node);
+    }
+
 }

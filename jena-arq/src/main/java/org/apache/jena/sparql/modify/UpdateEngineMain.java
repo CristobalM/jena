@@ -21,6 +21,7 @@ package org.apache.jena.sparql.modify;
 import java.util.function.Consumer;
 
 import org.apache.jena.atlas.lib.Sink;
+import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.DatasetGraph ;
@@ -86,11 +87,19 @@ public class UpdateEngineMain extends UpdateEngineBase
             resultingUpdateSink = new UpdateVisitorSink(this.prepareWorker(),
                     sink(quad -> {
                         datasetGraph.add(quad);
-                        cachingUpdater.addTriple(quad.asTriple());
+                        Triple triple = quad.asTriple();
+                        byte[] subjectBA = datasetGraph.convertToBytesArray(triple.getSubject());
+                        byte[] predicateBA = datasetGraph.convertToBytesArray(triple.getPredicate());
+                        byte[] objectBA = datasetGraph.convertToBytesArray(triple.getObject());
+                        cachingUpdater.addTriple( TupleFactory.create3(subjectBA, predicateBA, objectBA));
                     }),
                     sink(quad -> {
                         datasetGraph.delete(quad);
-                        cachingUpdater.deleteTriple(quad.asTriple());
+                        Triple triple = quad.asTriple();
+                        byte[] subjectBA = datasetGraph.convertToBytesArray(triple.getSubject());
+                        byte[] predicateBA = datasetGraph.convertToBytesArray(triple.getPredicate());
+                        byte[] objectBA = datasetGraph.convertToBytesArray(triple.getObject());
+                        cachingUpdater.deleteTriple(TupleFactory.create3(subjectBA, predicateBA, objectBA));
                     }));
         }
         else{

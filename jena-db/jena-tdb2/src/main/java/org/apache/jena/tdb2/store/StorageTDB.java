@@ -18,11 +18,9 @@
 
 package org.apache.jena.tdb2.store;
 
-import java.util.Iterator;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.atlas.lib.tuple.Tuple;
+import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.dboe.storage.StorageRDF;
 import org.apache.jena.dboe.transaction.txn.Transaction;
 import org.apache.jena.dboe.transaction.txn.TransactionalSystem;
@@ -30,20 +28,26 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.sparql.core.Quad;
 
-/** {@link StorageRDF} for TDB2 */
-public class StorageTDB implements StorageRDF {
-    // SWITCHING. This could be the switch point, not the DatasetGraph. Probably makes little difference.
-    private TripleTable                 tripleTable;
-    private QuadTable                   quadTable;
-    private TransactionalSystem         txnSystem;
-    // SWITCHING.
+import java.util.Iterator;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+/**
+ * {@link StorageRDF} for TDB2
+ */
+public class StorageTDB implements StorageRDF {
+    private static final int DeleteBufferSize = 1000;
     // In notifyAdd and notifyDelete,  check whether the change is a real change or not.
     // e.g. Adding a quad already present is not a real change.
     // However, that requires looking in the data so incurs a cost.
     // Normally, "false". "QuadAction.NO_*" are not used.
-    private final boolean               checkForChange = false;
-    private boolean                     closed         = false;
+    private final boolean checkForChange = false;
+    // SWITCHING. This could be the switch point, not the DatasetGraph. Probably makes little difference.
+    private TripleTable tripleTable;
+    // SWITCHING.
+    private QuadTable quadTable;
+    private TransactionalSystem txnSystem;
+    private boolean closed = false;
 
     public StorageTDB(TransactionalSystem txnSystem, TripleTable tripleTable, QuadTable quadTable) {
         this.txnSystem = txnSystem;
@@ -61,11 +65,14 @@ public class StorageTDB implements StorageRDF {
         return tripleTable;
     }
 
-    private void checkActive() {}
+    private void checkActive() {
+    }
 
-    private final void notifyAdd(Node g, Node s, Node p, Node o) { }
+    private final void notifyAdd(Node g, Node s, Node p, Node o) {
+    }
 
-    private final void notifyDelete(Node g, Node s, Node p, Node o) { }
+    private final void notifyDelete(Node g, Node s, Node p, Node o) {
+    }
 
     @Override
     public void add(Node s, Node p, Node o) {
@@ -103,21 +110,21 @@ public class StorageTDB implements StorageRDF {
     public void removeAll(Node s, Node p, Node o) {
         checkActive();
         ensureWriteTxn();
-        removeWorker(() -> tripleTable.getNodeTupleTable().findAsNodeIds(s,p,o),
-                     x  -> tripleTable.getNodeTupleTable().getTupleTable().delete(x) );
+        removeWorker(() -> tripleTable.getNodeTupleTable().findAsNodeIds(s, p, o),
+                x -> tripleTable.getNodeTupleTable().getTupleTable().delete(x));
     }
 
     @Override
     public void removeAll(Node g, Node s, Node p, Node o) {
         checkActive();
         ensureWriteTxn();
-        removeWorker(() -> quadTable.getNodeTupleTable().findAsNodeIds(g,s,p,o),
-                     x  -> quadTable.getNodeTupleTable().getTupleTable().delete(x) );
+        removeWorker(() -> quadTable.getNodeTupleTable().findAsNodeIds(g, s, p, o),
+                x -> quadTable.getNodeTupleTable().getTupleTable().delete(x));
     }
 
-    private static final int DeleteBufferSize = 1000;
-
-    /** General purpose "remove by pattern" code */
+    /**
+     * General purpose "remove by pattern" code
+     */
     private void removeWorker(Supplier<Iterator<Tuple<NodeId>>> finder, Consumer<Tuple<NodeId>> deleter) {
         // Allocate buffer once.
         // Not Java11 @SuppressWarnings("unchecked")
@@ -127,20 +134,20 @@ public class StorageTDB implements StorageRDF {
             Iterator<Tuple<NodeId>> iter = finder.get();
             // Get a slice
             int idx = 0;
-            for (; idx < DeleteBufferSize; idx++ ) {
-                if ( !iter.hasNext() )
+            for (; idx < DeleteBufferSize; idx++) {
+                if (!iter.hasNext())
                     break;
                 buffer[idx] = iter.next();
             }
             // Delete them.
-            for ( int i = 0; i < idx; i++ ) {
+            for (int i = 0; i < idx; i++) {
                 @SuppressWarnings("unchecked")
-                Tuple<NodeId> x = (Tuple<NodeId>)buffer[i];
+                Tuple<NodeId> x = (Tuple<NodeId>) buffer[i];
                 deleter.accept(x);
                 buffer[i] = null;
             }
             // Finished?
-            if ( idx < DeleteBufferSize )
+            if (idx < DeleteBufferSize)
                 break;
         }
     }
@@ -157,6 +164,14 @@ public class StorageTDB implements StorageRDF {
         checkActive();
         requireTxn();
         return getTripleTable().find(s, p, o);
+    }
+
+    @Override
+    public Iterator<Tuple<byte[]>> findIdsBytes(Node s, Node p, Node o) {
+        checkActive();
+        requireTxn();
+        Iterator<Tuple<NodeId>> nodeIds = getTripleTable().getNodeTupleTable().findAsNodeIds(s, p, o);
+        return Iter.map(nodeIds, tuple -> TupleFactory.create3(tuple.get(0).toBytesArray(), tuple.get(1).toBytesArray(), tuple.get(2).toBytesArray()));
     }
 
 //    @Override
@@ -188,7 +203,8 @@ public class StorageTDB implements StorageRDF {
     }
 
     // This test is also done by the transactional components so no need to test here.
-    private void requireTxn() {}
+    private void requireTxn() {
+    }
 
 //    private void requireTxn() {
 //        if ( ! txnSystem.isInTransaction() )

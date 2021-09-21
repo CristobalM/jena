@@ -23,6 +23,8 @@ import java.util.stream.Stream;
 
 import org.apache.jena.atlas.iterator.Iter;
 import org.apache.jena.atlas.lib.Closeable ;
+import org.apache.jena.atlas.lib.NotImplemented;
+import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.graph.Graph ;
 import org.apache.jena.graph.Node ;
 import org.apache.jena.graph.Triple ;
@@ -118,6 +120,12 @@ public interface DatasetGraph extends Transactional, Closeable
         return find(Node.ANY, Node.ANY, Node.ANY, Node.ANY);
     }
 
+    public default Iterator<Tuple<byte[]>> findIdsAsBytesArray(Node s, Node p, Node o) {
+        return null;
+    }
+
+
+
     /** Find matching quads in the dataset - may include wildcards, Node.ANY or null
      * @see Graph#find(Triple)
      */
@@ -197,5 +205,10 @@ public interface DatasetGraph extends Transactional, Closeable
      */
     public default boolean supportsTransactionAbort() {
         return false;
+    }
+
+
+    public default byte[] convertToBytesArray(Node node) {
+        throw new NotImplemented("convertToBytesArray not implemented");
     }
 }

@@ -252,6 +252,11 @@ public class DatasetGraphTDB extends DatasetGraphTriplesQuads
         }
     }
 
+    @Override
+    public Iterator<Tuple<byte[]>> findIdsAsBytesArray(Node s, Node p, Node o) {
+        return tripleTable.getNodeTupleTable().findNodeIdsBytes(s, p, o);
+    }
+
     public Location getLocation()       { return config.location ; }
 
     @Override
@@ -280,4 +285,9 @@ public class DatasetGraphTDB extends DatasetGraphTriplesQuads
     @Override public TxnType transactionType()          { return txn.transactionType(); }
     @Override public boolean supportsTransactions()     { return true; }
     @Override public boolean supportsTransactionAbort() { return false; }
+
+    @Override
+    public byte[] convertToBytesArray(Node node) {
+        return tripleTable.getNodeTupleTable().getNodeTable().getNodeIdForNode(node).toBytesArray();
+    }
 }

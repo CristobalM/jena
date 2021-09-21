@@ -62,7 +62,7 @@ class StageMatchTuple {
         
         Iterator<Tuple<NodeId>> iterMatches = null;
         if(cachingEnabled(execCxt)) {
-        	iterMatches = accessFromCaching(ids, patternTuple, nodeTupleTable.getNodeTable(), execCxt);
+        	iterMatches = accessFromCaching(ids,execCxt);
         }
         if(iterMatches == null) {
         	iterMatches = nodeTupleTable.find(TupleFactory.create(ids));	
@@ -106,99 +106,69 @@ class StageMatchTuple {
         return Iter.iter(iterMatches).map(binder).removeNulls();
     }
 
-    private static Iterator<Tuple<NodeId>> accessFromCaching(NodeId[] nodeIds, Tuple<Node> patternTuple, NodeTable nodeTable,
+    private static Iterator<Tuple<NodeId>> accessFromCaching(NodeId[] nodeIds,
 			ExecutionContext execCxt) {
     	CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
         
-        Triple tPattern = patternFromTupleAndNodeId(patternTuple, nodeIds, nodeTable); // new Triple(patternTuple.get(0), patternTuple.get(1), patternTuple.get(2));
+        Tuple<byte[]> tPattern = patternIdsFromNodeIds(nodeIds); // new Triple(patternTuple.get(0), patternTuple.get(1), patternTuple.get(2));
 
         if(!cachingTriplesConnector.canRetrieve(tPattern)) {
         	return null;
         }
         
-        Iterator<Triple> tripleMatches = cachingTriplesConnector.accessData(tPattern);
-        
- 
-        
-        if(patternTuple.len() == 3)
-            return Iter.map(tripleMatches, triple -> {
-            	NodeId subjectId = nodeTable.getNodeIdForNode(triple.getSubject());
-            	NodeId predicateId = nodeTable.getNodeIdForNode(triple.getPredicate());
-            	NodeId objectId = nodeTable.getNodeIdForNode(triple.getObject());
-            	
-            	if(subjectId == NodeId.NodeDoesNotExist) {
-            		System.out.println("couldnt find " + triple.getSubject().toString());
-            	}
+        Iterator<Tuple<byte[]>> tripleMatches = cachingTriplesConnector.accessData(tPattern);
 
-            	if(predicateId == NodeId.NodeDoesNotExist) {
-            		System.out.println("couldnt find " + triple.getPredicate().toString());
-            	}
-            	
-
-            	if(objectId == NodeId.NodeDoesNotExist) {
-            		System.out.println("couldnt find " + triple.getObject().toString());
-            	}
-            	
-            	return TupleFactory.create3(
-            			subjectId,
-            			predicateId,
-            			objectId
-            			);
-            	
-            });
+        if(nodeIds.length == 3)
+            return Iter.map(tripleMatches, StageMatchTuple::transformToNodeIds);
         
     	return Iter.map(tripleMatches, triple -> {
-    		NodeId subjectId = nodeTable.getNodeIdForNode(triple.getSubject());
-        	NodeId predicateId = nodeTable.getNodeIdForNode(triple.getPredicate());
-        	NodeId objectId = nodeTable.getNodeIdForNode(triple.getObject());
-        	if(subjectId == NodeId.NodeDoesNotExist) {
-        		System.out.println("couldnt find " + triple.getSubject().toString());
-        	}
-
-        	if(predicateId == NodeId.NodeDoesNotExist) {
-        		System.out.println("couldnt find " + triple.getPredicate().toString());
-        	}
-        	
-
-        	if(objectId == NodeId.NodeDoesNotExist) {
-        		System.out.println("couldnt find " + triple.getObject().toString());
-        	}
+            Tuple<NodeId> tuple = transformToNodeIds(triple);
         	
         	return TupleFactory.create4(
         			null,
-        			subjectId,
-        			predicateId,
-        			objectId
+                    tuple.get(0),
+                    tuple.get(1),
+                    tuple.get(2)
         			);
     	});
-    
 	}
-    
-	private static Triple patternFromTupleAndNodeId(Tuple<Node> patternTuple, NodeId[] nodeIds, NodeTable nodeTable) {
-		assert patternTuple.len() == nodeIds.length;
-		assert patternTuple.len() == 3 || patternTuple.len() == 4;
-		Node subject= null;
-		Node predicate = null;
-		Node object = null;
-		
-		int starting = patternTuple.len() == 4 ? 1 : 0;
-		for(int i = starting; i < nodeIds.length; i++) {
-			int j = i-starting;
-			NodeId currNodeId = nodeIds[i];
-			Node currPatternNode = patternTuple.get(i);
-			Node nextNode;
-			if(currPatternNode.isVariable() && currNodeId != null) {
-				nextNode = nodeTable.getNodeForNodeId(currNodeId);
-			}
-			else {
-				nextNode = currPatternNode;
-			}
-			if(j == 0) subject = nextNode;
-			else if(j == 1) predicate = nextNode;
-			else object = nextNode;
-		}
-		return Triple.create(subject, predicate, object);
-	}
+
+    private static Tuple<NodeId> transformToNodeIds(Tuple<byte[]> triple) {
+        NodeId subjectId = NodeId.fromBytesArray(triple.get(0));
+        NodeId predicateId =  NodeId.fromBytesArray(triple.get(1));
+        NodeId objectId =  NodeId.fromBytesArray(triple.get(2));
+
+        if(subjectId == NodeId.NodeDoesNotExist) {
+            System.out.println("couldnt find subject");
+        }
+
+        if(predicateId == NodeId.NodeDoesNotExist) {
+            System.out.println("couldnt find predicate");
+        }
+
+
+        if(objectId == NodeId.NodeDoesNotExist) {
+            System.out.println("couldnt find object");
+        }
+        return TupleFactory.create3(subjectId, predicateId, objectId);
+    }
+
+    private static Tuple<byte[]> patternIdsFromNodeIds(NodeId[] nodeIds) {
+        int starting = nodeIds.length == 4 ? 1 : 0;
+        byte[] subjectBA = null;
+        byte[] predicateBA = null;
+        byte[] objectBA = null;
+        for(int i = starting; i < nodeIds.length; i++) {
+            int j = i-starting;
+            NodeId currNodeId = nodeIds[i];
+            //Node nextNode;
+
+            if(j == 0) subjectBA = currNodeId.toBytesArray();
+            else if(j == 1) predicateBA = currNodeId.toBytesArray();
+            else objectBA = currNodeId.toBytesArray();
+        }
+        return TupleFactory.create3(subjectBA, predicateBA, objectBA);
+    }
 
 	private static boolean cachingEnabled(ExecutionContext execCxt) {
     	CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);

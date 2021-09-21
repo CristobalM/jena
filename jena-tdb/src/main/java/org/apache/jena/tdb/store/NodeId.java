@@ -75,6 +75,18 @@ public class NodeId
     public void toByteBuffer(ByteBuffer b, int idx) { b.putLong(idx, value) ; }
     
     public void toBytes(byte[] b, int idx) { Bytes.setLong(value, b, idx) ; }
+
+
+    public byte[] toBytesArray() {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(Long.BYTES);
+        byteBuffer.putLong(value);
+        return byteBuffer.array();
+    }
+
+    public static NodeId fromBytesArray(byte[] inputBytesArray){
+        ByteBuffer byteBuffer = ByteBuffer.wrap(inputBytesArray);
+        return new NodeId(byteBuffer.getLong());
+    }
  
     public boolean isDirect() { return type() != NONE && type() != SPECIAL ; }
                                                        
@@ -364,6 +376,7 @@ public class NodeId
     
     public static final boolean isAny(NodeId nodeId) { return nodeId == NodeIdAny || nodeId == null ; }
     public static final boolean isDoesNotExist(NodeId nodeId) { return nodeId == NodeDoesNotExist ; }
-    
+
+
     //public reset(long value) { this.value = value ; }
 }

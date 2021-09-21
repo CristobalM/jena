@@ -64,7 +64,12 @@ public class DatasetGraphTDB extends DatasetGraphStorage
     public boolean supportsTransactionAbort() {
         return true;
     }
-    
+
+    @Override
+    public byte[] convertToBytesArray(Node node) {
+        return storageTDB.getTripleTable().getNodeTupleTable().getNodeTable().getNodeIdForNode(node).toBytesArray();
+    }
+
     public Location getLocation() {
         return location;
     }
@@ -142,6 +147,11 @@ public class DatasetGraphTDB extends DatasetGraphStorage
         Iterator<NodeId> z = Iter.iter(x).map(t -> t.get(0)).distinct();
         Iterator<Node> r = NodeLib.nodes(quads.getNodeTable(), z);
         return r;
+    }
+
+    @Override
+    public Iterator<Tuple<byte[]>> findIdsAsBytesArray(Node s, Node p, Node o) {
+        return getTripleTable().getNodeTupleTable().findNodeIdsBytes(s, p, o);
     }
 
     public NodeTupleTable chooseNodeTupleTable(Node graphNode) {

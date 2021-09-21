@@ -103,18 +103,38 @@ public class SolverRX {
         CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
         
         Iterator<Quad> dsgIter = null;
-        if(!cachingTriplesConnector.canRetrieve(tPattern)) {
-            dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
+        if(cachingTriplesConnector.isCaching()){
+            Tuple<byte[]> bytesArrayTuple = toBytesArrayTuple(tPattern, nodeTable);
+            if(cachingTriplesConnector.canRetrieve(bytesArrayTuple)){
+                dsgIter = Iter.map(cachingTriplesConnector.accessData(bytesArrayTuple), bytesTriple -> Quad.create(null, toConcreteTriple(bytesTriple, nodeTable)));
+            }
         }
-        else {
-        	dsgIter = Iter.map(cachingTriplesConnector.accessData(tPattern), triple -> {
-        		return Quad.create(null, triple);
-        	});
+
+        if(dsgIter == null) {
+            dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
         }
 
         Iterator<Binding> matched = Iter.iter(dsgIter).map(dQuad->SolverRX4.matchQuad(input, dQuad, tGraphNode, tPattern)).removeNulls();
         return convFromBinding(matched, nodeTable);
     }
+
+    private static Triple toConcreteTriple(Tuple<byte[]> bytesTriple, NodeTable nodeTable) {
+        Tuple<Node> nodes = bytesTriple.map(bytesArray -> nodeTable.getNodeForNodeId(NodeId.fromBytesArray(bytesArray)));
+        return Triple.create(nodes.get(0), nodes.get(1), nodes.get(2));
+    }
+
+    private static Tuple<byte[]> toBytesArrayTuple(Triple tPattern, NodeTable nodeTable) {
+        return TupleFactory.create3(
+                toBytesArray(tPattern.getSubject(), nodeTable),
+                toBytesArray(tPattern.getPredicate(), nodeTable),
+                toBytesArray(tPattern.getObject(), nodeTable)
+        );
+    }
+
+    private static byte[] toBytesArray(Node node, NodeTable nodeTable) {
+        return nodeTable.getNodeIdForNode(node).toBytesArray();
+    }
+
 
     static Iterator<Quad> accessData(Tuple<Node> patternTuple, NodeTupleTable nodeTupleTable,
                                      boolean anyGraph, Predicate<Tuple<NodeId>> filter,
