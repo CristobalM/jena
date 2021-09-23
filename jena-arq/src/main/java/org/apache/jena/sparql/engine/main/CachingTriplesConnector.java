@@ -6,9 +6,9 @@ import org.apache.jena.atlas.lib.tuple.Tuple;
 
 public interface CachingTriplesConnector {
 
-	boolean canRetrieve(Tuple<byte[]> tPattern);
+	boolean canRetrieve(Tuple<Long> tPattern);
 
-	Iterator<Tuple<byte[]>> accessData(Tuple<byte[]> tPattern);
+	Iterator<Tuple<Long>> accessData(Tuple<Long> tPattern);
 	
 	boolean isCaching();
 

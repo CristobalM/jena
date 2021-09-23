@@ -40,9 +40,6 @@ public interface NodeTupleTable extends Sync, Closeable
     /** Find by node. */
     public Iterator<Tuple<Node>> find(Node... nodes);
 
-    /** Find by node. */
-    public Iterator<Tuple<byte[]>> findNodeIdsBytes(Node... nodes);
-
     /** Find by node - return an iterator of NodeIds. Can return "null" for not found as well as NullIterator */
     public Iterator<Tuple<NodeId>> findAsNodeIds(Node... nodes);
 

@@ -60,14 +60,8 @@ class StageMatchTuple {
             return Iter.nullIterator();
         
         
-        Iterator<Tuple<NodeId>> iterMatches = null;
-        if(cachingEnabled(execCxt)) {
-        	iterMatches = accessFromCaching(ids,execCxt);
-        }
-        if(iterMatches == null) {
-        	iterMatches = nodeTupleTable.find(TupleFactory.create(ids));	
-        }
-        
+        Iterator<Tuple<NodeId>> iterMatches = nodeTupleTable.find(TupleFactory.create(ids));
+
         if ( false ) {
             List<Tuple<NodeId>> x = Iter.toList(iterMatches);
             System.out.println(x);
@@ -105,75 +99,6 @@ class StageMatchTuple {
         Function<Tuple<NodeId>, BindingNodeId> binder = tuple -> tupleToBinding(input, tuple, vars);
         return Iter.iter(iterMatches).map(binder).removeNulls();
     }
-
-    private static Iterator<Tuple<NodeId>> accessFromCaching(NodeId[] nodeIds,
-			ExecutionContext execCxt) {
-    	CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
-        
-        Tuple<byte[]> tPattern = patternIdsFromNodeIds(nodeIds); // new Triple(patternTuple.get(0), patternTuple.get(1), patternTuple.get(2));
-
-        if(!cachingTriplesConnector.canRetrieve(tPattern)) {
-        	return null;
-        }
-        
-        Iterator<Tuple<byte[]>> tripleMatches = cachingTriplesConnector.accessData(tPattern);
-
-        if(nodeIds.length == 3)
-            return Iter.map(tripleMatches, StageMatchTuple::transformToNodeIds);
-        
-    	return Iter.map(tripleMatches, triple -> {
-            Tuple<NodeId> tuple = transformToNodeIds(triple);
-        	
-        	return TupleFactory.create4(
-        			null,
-                    tuple.get(0),
-                    tuple.get(1),
-                    tuple.get(2)
-        			);
-    	});
-	}
-
-    private static Tuple<NodeId> transformToNodeIds(Tuple<byte[]> triple) {
-        NodeId subjectId = NodeId.fromBytesArray(triple.get(0));
-        NodeId predicateId =  NodeId.fromBytesArray(triple.get(1));
-        NodeId objectId =  NodeId.fromBytesArray(triple.get(2));
-
-        if(subjectId == NodeId.NodeDoesNotExist) {
-            System.out.println("couldnt find subject");
-        }
-
-        if(predicateId == NodeId.NodeDoesNotExist) {
-            System.out.println("couldnt find predicate");
-        }
-
-
-        if(objectId == NodeId.NodeDoesNotExist) {
-            System.out.println("couldnt find object");
-        }
-        return TupleFactory.create3(subjectId, predicateId, objectId);
-    }
-
-    private static Tuple<byte[]> patternIdsFromNodeIds(NodeId[] nodeIds) {
-        int starting = nodeIds.length == 4 ? 1 : 0;
-        byte[] subjectBA = null;
-        byte[] predicateBA = null;
-        byte[] objectBA = null;
-        for(int i = starting; i < nodeIds.length; i++) {
-            int j = i-starting;
-            NodeId currNodeId = nodeIds[i];
-            //Node nextNode;
-
-            if(j == 0) subjectBA = currNodeId.toBytesArray();
-            else if(j == 1) predicateBA = currNodeId.toBytesArray();
-            else objectBA = currNodeId.toBytesArray();
-        }
-        return TupleFactory.create3(subjectBA, predicateBA, objectBA);
-    }
-
-	private static boolean cachingEnabled(ExecutionContext execCxt) {
-    	CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
-    	return cachingTriplesConnector.isCaching();
-	}
 
 	private static BindingNodeId tupleToBinding(BindingNodeId input, Tuple<NodeId> tuple, Var[] var) {
         // Reuseable BindingNodeId builder?

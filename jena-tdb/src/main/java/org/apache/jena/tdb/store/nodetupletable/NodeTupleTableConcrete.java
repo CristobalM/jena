@@ -139,8 +139,12 @@ public class NodeTupleTableConcrete implements NodeTupleTable {
     }
 
     @Override
-    public Iterator<Tuple<byte[]>> findNodeIdsBytes(Node... nodes) {
-        return Iter.map(findAsNodeIds(nodes), tuple -> TupleFactory.create3(tuple.get(0).toBytesArray(), tuple.get(1).toBytesArray(), tuple.get(2).toBytesArray()));
+    public Iterator<Tuple<Long>> findNodeIdsLongs(Node... nodes) {
+        return Iter.map(findAsNodeIds(nodes),
+                tuple -> TupleFactory.create3(
+                        tuple.get(0).getId(),
+                        tuple.get(1).getId(),
+                        tuple.get(2).getId()));
     }
 
     /**

@@ -21,6 +21,7 @@ package org.apache.jena.sparql.core;
 import java.util.Iterator;
 
 import org.apache.jena.atlas.lib.Sync;
+import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.ReadWrite;
@@ -199,6 +200,11 @@ public class DatasetGraphWrapper implements DatasetGraph, Sync
     @Override
     public Iterator<Quad> find()
     { return getR().find(); }
+
+    @Override
+    public Iterator<Tuple<Long>> findIdsAsLongs(Node s, Node p, Node o) {
+        return getR().findIdsAsLongs(s, p, o);
+    }
 
     @Override
     public Iterator<Quad> find(Quad quad)

@@ -57,11 +57,6 @@ public class NodeTupleTableWrapper implements NodeTupleTable
     { return nodeTupleTable.find(nodes); }
 
     @Override
-    public Iterator<Tuple<byte[]>> findNodeIdsBytes(Node... nodes) {
-        return nodeTupleTable.findNodeIdsBytes();
-    }
-
-    @Override
     public Iterator<Tuple<NodeId>> find(NodeId... ids)
     { return nodeTupleTable.find(ids); }
 

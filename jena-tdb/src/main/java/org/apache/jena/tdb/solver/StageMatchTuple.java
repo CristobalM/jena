@@ -28,7 +28,6 @@ import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Triple;
 import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ExecutionContext;
@@ -110,13 +109,14 @@ class StageMatchTuple {
                                                              ExecutionContext execCxt) {
         CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
 
-        Tuple<byte[]> tPattern = patternIdsFromNodeIds(nodeIds); // new Triple(patternTuple.get(0), patternTuple.get(1), patternTuple.get(2));
+        assert nodeIds.length == 3;
+        Tuple<Long> tPattern = patternIdsFromNodeIds(nodeIds); // new Triple(patternTuple.get(0), patternTuple.get(1), patternTuple.get(2));
 
         if(!cachingTriplesConnector.canRetrieve(tPattern)) {
             return null;
         }
 
-        Iterator<Tuple<byte[]>> tripleMatches = cachingTriplesConnector.accessData(tPattern);
+        Iterator<Tuple<Long>> tripleMatches = cachingTriplesConnector.accessData(tPattern);
 
         if(nodeIds.length == 3)
             return Iter.map(tripleMatches, StageMatchTuple::transformToNodeIds);
@@ -133,41 +133,29 @@ class StageMatchTuple {
         });
     }
 
-    private static Tuple<NodeId> transformToNodeIds(Tuple<byte[]> triple) {
-        NodeId subjectId = NodeId.fromBytesArray(triple.get(0));
-        NodeId predicateId =  NodeId.fromBytesArray(triple.get(1));
-        NodeId objectId =  NodeId.fromBytesArray(triple.get(2));
-
-        if(subjectId == NodeId.NodeDoesNotExist) {
-            System.out.println("couldnt find subject");
-        }
-
-        if(predicateId == NodeId.NodeDoesNotExist) {
-            System.out.println("couldnt find predicate");
-        }
-
-
-        if(objectId == NodeId.NodeDoesNotExist) {
-            System.out.println("couldnt find object");
-        }
+    private static Tuple<NodeId> transformToNodeIds(Tuple<Long> triple) {
+        NodeId subjectId = new NodeId(triple.get(0));
+        NodeId predicateId =  new NodeId(triple.get(1));
+        NodeId objectId =  new NodeId(triple.get(2));
         return TupleFactory.create3(subjectId, predicateId, objectId);
     }
 
-    private static Tuple<byte[]> patternIdsFromNodeIds(NodeId[] nodeIds) {
+    private static final long NODE_ID_ANY = NodeId.NodeIdAny.getId();
+    private static Tuple<Long> patternIdsFromNodeIds(NodeId[] nodeIds) {
         int starting = nodeIds.length == 4 ? 1 : 0;
-        byte[] subjectBA = null;
-        byte[] predicateBA = null;
-        byte[] objectBA = null;
+        long subject = NodeId.NodeDoesNotExist.getId();
+        long predicate = NodeId.NodeDoesNotExist.getId();
+        long object = NodeId.NodeDoesNotExist.getId();
         for(int i = starting; i < nodeIds.length; i++) {
             int j = i-starting;
             NodeId currNodeId = nodeIds[i];
             //Node nextNode;
 
-            if(j == 0) subjectBA = currNodeId.toBytesArray();
-            else if(j == 1) predicateBA = currNodeId.toBytesArray();
-            else objectBA = currNodeId.toBytesArray();
+            if(j == 0) subject = currNodeId != null ?  currNodeId.getId() : NODE_ID_ANY;
+            else if(j == 1) predicate = currNodeId != null ? currNodeId.getId() : NODE_ID_ANY;
+            else object = currNodeId != null ? currNodeId.getId() : NODE_ID_ANY;
         }
-        return TupleFactory.create3(subjectBA, predicateBA, objectBA);
+        return TupleFactory.create3(subject, predicate, object);
     }
 
     private static boolean cachingEnabled(ExecutionContext execCxt) {

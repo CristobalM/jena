@@ -32,13 +32,11 @@ import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Substitute;
 import org.apache.jena.sparql.engine.ExecutionContext;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingFactory;
-import org.apache.jena.sparql.engine.main.CachingTriplesConnector;
 import org.apache.jena.sparql.engine.main.solver.SolverRX4;
 import org.apache.jena.tdb2.lib.TupleLib;
 import org.apache.jena.tdb2.store.NodeId;
@@ -100,36 +98,13 @@ public class SolverRX {
                 : TupleFactory.create4(g,s,p,o);
 
 
-        CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
+        Iterator<Quad> dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
 
-        Iterator<Quad> dsgIter = null;
-        if(cachingTriplesConnector.isCaching()){
-            Tuple<byte[]> bytesArrayTuple = toBytesArrayTuple(tPattern, nodeTable);
-            if(cachingTriplesConnector.canRetrieve(bytesArrayTuple)){
-                dsgIter = Iter.map(cachingTriplesConnector.accessData(bytesArrayTuple), bytesTriple -> Quad.create(null, toConcreteTriple(bytesTriple, nodeTable)));
-            }
-        }
-
-        if(dsgIter == null) {
-            dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
-        }
 
         Iterator<Binding> matched = Iter.iter(dsgIter).map(dQuad->SolverRX4.matchQuad(input, dQuad, tGraphNode, tPattern)).removeNulls();
         return convFromBinding(matched, nodeTable);
     }
 
-    private static Triple toConcreteTriple(Tuple<byte[]> bytesTriple, NodeTable nodeTable) {
-        Tuple<Node> nodes = bytesTriple.map(bytesArray -> nodeTable.getNodeForNodeId(NodeId.fromBytesArray(bytesArray)));
-        return Triple.create(nodes.get(0), nodes.get(1), nodes.get(2));
-    }
-
-    private static Tuple<byte[]> toBytesArrayTuple(Triple tPattern, NodeTable nodeTable) {
-        return TupleFactory.create3(
-                toBytesArray(tPattern.getSubject(), nodeTable),
-                toBytesArray(tPattern.getPredicate(), nodeTable),
-                toBytesArray(tPattern.getObject(), nodeTable)
-        );
-    }
 
     private static byte[] toBytesArray(Node node, NodeTable nodeTable) {
         return nodeTable.getNodeIdForNode(node).toBytesArray();

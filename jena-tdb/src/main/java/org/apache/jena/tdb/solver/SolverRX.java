@@ -104,9 +104,9 @@ public class SolverRX {
         
         Iterator<Quad> dsgIter = null;
         if(cachingTriplesConnector.isCaching()){
-            Tuple<byte[]> bytesArrayTuple = toBytesArrayTuple(tPattern, nodeTable);
-            if(cachingTriplesConnector.canRetrieve(bytesArrayTuple)){
-                dsgIter = Iter.map(cachingTriplesConnector.accessData(bytesArrayTuple), bytesTriple -> Quad.create(null, toConcreteTriple(bytesTriple, nodeTable)));
+            Tuple<Long> longsTuple = toLongsTuple(tPattern, nodeTable);
+            if(cachingTriplesConnector.canRetrieve(longsTuple)){
+                dsgIter = Iter.map(cachingTriplesConnector.accessData(longsTuple), longTriple -> Quad.create(null, toConcreteTriple(longTriple, nodeTable)));
             }
         }
 
@@ -118,21 +118,21 @@ public class SolverRX {
         return convFromBinding(matched, nodeTable);
     }
 
-    private static Triple toConcreteTriple(Tuple<byte[]> bytesTriple, NodeTable nodeTable) {
-        Tuple<Node> nodes = bytesTriple.map(bytesArray -> nodeTable.getNodeForNodeId(NodeId.fromBytesArray(bytesArray)));
+    private static Triple toConcreteTriple(Tuple<Long> longsTriple, NodeTable nodeTable) {
+        Tuple<Node> nodes = longsTriple.map(longValue -> nodeTable.getNodeForNodeId(NodeId.create(longValue)));
         return Triple.create(nodes.get(0), nodes.get(1), nodes.get(2));
     }
 
-    private static Tuple<byte[]> toBytesArrayTuple(Triple tPattern, NodeTable nodeTable) {
+    private static Tuple<Long> toLongsTuple(Triple tPattern, NodeTable nodeTable) {
         return TupleFactory.create3(
-                toBytesArray(tPattern.getSubject(), nodeTable),
-                toBytesArray(tPattern.getPredicate(), nodeTable),
-                toBytesArray(tPattern.getObject(), nodeTable)
+                nodeToLongValue(tPattern.getSubject(), nodeTable),
+                nodeToLongValue(tPattern.getPredicate(), nodeTable),
+                nodeToLongValue(tPattern.getObject(), nodeTable)
         );
     }
 
-    private static byte[] toBytesArray(Node node, NodeTable nodeTable) {
-        return nodeTable.getNodeIdForNode(node).toBytesArray();
+    private static Long nodeToLongValue(Node node, NodeTable nodeTable) {
+        return nodeTable.getNodeIdForNode(node).getId();
     }
 
 

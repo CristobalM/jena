@@ -7,13 +7,13 @@ import org.apache.jena.atlas.lib.tuple.Tuple;
 public class NoTriplesCaching implements CachingTriplesConnector {
 
 	@Override
-	public boolean canRetrieve(Tuple<byte[]> tPattern) {
+	public boolean canRetrieve(Tuple<Long> tPattern) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Iterator<Tuple<byte[]>> accessData(Tuple<byte[]> tPattern) {
+	public Iterator<Tuple<Long>> accessData(Tuple<Long> tPattern) {
 		// TODO Auto-generated method stub
 		return null;
 	}

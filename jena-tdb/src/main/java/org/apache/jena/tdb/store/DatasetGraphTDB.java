@@ -253,8 +253,8 @@ public class DatasetGraphTDB extends DatasetGraphTriplesQuads
     }
 
     @Override
-    public Iterator<Tuple<byte[]>> findIdsAsBytesArray(Node s, Node p, Node o) {
-        return tripleTable.getNodeTupleTable().findNodeIdsBytes(s, p, o);
+    public Iterator<Tuple<Long>> findIdsAsLongs(Node s, Node p, Node o) {
+        return tripleTable.getNodeTupleTable().findNodeIdsLongs(s, p, o);
     }
 
     public Location getLocation()       { return config.location ; }

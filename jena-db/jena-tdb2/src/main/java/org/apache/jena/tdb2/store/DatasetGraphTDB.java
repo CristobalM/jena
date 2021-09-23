@@ -149,11 +149,6 @@ public class DatasetGraphTDB extends DatasetGraphStorage
         return r;
     }
 
-    @Override
-    public Iterator<Tuple<byte[]>> findIdsAsBytesArray(Node s, Node p, Node o) {
-        return getTripleTable().getNodeTupleTable().findNodeIdsBytes(s, p, o);
-    }
-
     public NodeTupleTable chooseNodeTupleTable(Node graphNode) {
         checkNotClosed();
         if ( graphNode == null || Quad.isDefaultGraph(graphNode) )

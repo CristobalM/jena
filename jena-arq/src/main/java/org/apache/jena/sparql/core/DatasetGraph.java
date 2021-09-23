@@ -120,8 +120,8 @@ public interface DatasetGraph extends Transactional, Closeable
         return find(Node.ANY, Node.ANY, Node.ANY, Node.ANY);
     }
 
-    public default Iterator<Tuple<byte[]>> findIdsAsBytesArray(Node s, Node p, Node o) {
-        return null;
+    public default Iterator<Tuple<Long>> findIdsAsLongs(Node s, Node p, Node o) {
+        throw new NotImplemented("findIdsAsLongs not implemented");
     }
 
 

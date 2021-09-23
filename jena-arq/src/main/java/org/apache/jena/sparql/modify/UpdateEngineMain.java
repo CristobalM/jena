@@ -18,6 +18,7 @@
 
 package org.apache.jena.sparql.modify;
 
+import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 
 import org.apache.jena.atlas.lib.Sink;
@@ -79,6 +80,10 @@ public class UpdateEngineMain extends UpdateEngineBase
         return updateSink ;
     }
 
+    private static Long byteArrayToLong(byte[] bytesArray){
+        return ByteBuffer.wrap(bytesArray).getLong();
+    }
+
     private UpdateSink createUpdateSink() {
         UpdateSink resultingUpdateSink;
         Object cachingUpdaterObj = context.get(ARQConstants.symCachingTriplesUpdater);
@@ -88,17 +93,17 @@ public class UpdateEngineMain extends UpdateEngineBase
                     sink(quad -> {
                         datasetGraph.add(quad);
                         Triple triple = quad.asTriple();
-                        byte[] subjectBA = datasetGraph.convertToBytesArray(triple.getSubject());
-                        byte[] predicateBA = datasetGraph.convertToBytesArray(triple.getPredicate());
-                        byte[] objectBA = datasetGraph.convertToBytesArray(triple.getObject());
+                        long subjectBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getSubject()));
+                        long predicateBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getPredicate()));
+                        long objectBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getObject()));
                         cachingUpdater.addTriple( TupleFactory.create3(subjectBA, predicateBA, objectBA));
                     }),
                     sink(quad -> {
                         datasetGraph.delete(quad);
                         Triple triple = quad.asTriple();
-                        byte[] subjectBA = datasetGraph.convertToBytesArray(triple.getSubject());
-                        byte[] predicateBA = datasetGraph.convertToBytesArray(triple.getPredicate());
-                        byte[] objectBA = datasetGraph.convertToBytesArray(triple.getObject());
+                        long subjectBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getSubject()));
+                        long predicateBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getPredicate()));
+                        long objectBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getObject()));
                         cachingUpdater.deleteTriple(TupleFactory.create3(subjectBA, predicateBA, objectBA));
                     }));
         }
