@@ -62,12 +62,6 @@ public class SystemTDB
 
     // ---- Constants that can't be changed without invalidating on-disk data.
 
-//    /** Size, in bytes, of a Java long */
-//    public static final int SizeOfLong              = Long.SIZE/Byte.SIZE;
-//
-//    /** Size, in bytes, of a Java int */
-//    public static final int SizeOfInt               = Integer.SIZE/Byte.SIZE;
-
     /** Size, in bytes, of the persistent representation of a node id */
     public static final int SizeOfNodeId            = NodeId.SIZE;
 
@@ -162,19 +156,17 @@ public class SystemTDB
 
     // ---- Cache sizes (within the JVM)
 
-    public static final int ObjectFileWriteCacheSize = 8*1024;
-
     /** Size of Node to NodeId cache.
      *  Used to map from Node to NodeId spaces.
      *  Used for loading and for query preparation.
      */
-    public static final int Node2NodeIdCacheSize    = intValue("Node2NodeIdCacheSize", ( is64bitSystem ? 200*1000 : 20*1000 ));
+    public static final int Node2NodeIdCacheSize    = intValue("Node2NodeIdCacheSize", ( is64bitSystem ? 200*1000 : 10*1000 ));
 
     /** Size of NodeId to Node cache.
      *  Used to map from NodeId to Node spaces.
-     *  Used for retriveing results.
+     *  Used for retrieving results.
      */
-    public static final int NodeId2NodeCacheSize    = intValue("NodeId2NodeCacheSize", ( is64bitSystem ? 750*1000 : 20*1000 ) );
+    public static final int NodeId2NodeCacheSize    = intValue("NodeId2NodeCacheSize", ( is64bitSystem ? 1000*1000 : 20*1000 ) );
 
     /** Size of Node lookup miss cache. */
     public static final int NodeMissCacheSize       = 1000;
@@ -190,7 +182,7 @@ public class SystemTDB
 //    /** Number of adds/deletes between calls to sync (-ve to disable) */
 //    public static final int SyncTick                = intValue("SyncTick", -1);
 
-    
+
     /** Default BGP optimizer */
     private static ReorderTransformation defaultReorderTransform = ReorderLib.fixed();
 
@@ -201,7 +193,7 @@ public class SystemTDB
     public static ReorderTransformation getDefaultReorderTransform() {
         return defaultReorderTransform;
     }
-    
+
     /** Unsupported (for non-standard setups)
      * @see #enableInlineLiterals
      */

@@ -49,7 +49,7 @@ public class WriterDatasetThrift implements WriterDatasetRIOT
     }
     @Override
     public void write(OutputStream out, DatasetGraph dsg, PrefixMap prefixMap, String baseURI, Context context) {
-        StreamRDF stream = BinRDF.streamToOutputStream(out, withValues) ;
+        StreamRDF stream = ThriftRDF.streamToOutputStream(out, withValues) ;
         stream.start();
         StreamRDFOps.sendDatasetToStream(dsg, stream, baseURI, prefixMap) ;
         stream.finish();

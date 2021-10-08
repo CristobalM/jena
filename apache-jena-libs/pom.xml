@@ -23,12 +23,12 @@
   <artifactId>apache-jena-libs</artifactId>
   <packaging>pom</packaging>
   <name>Apache Jena - Libraries POM</name>
-  <version>jena-4.2.0-dev-fork</version>
+  <version>jena-4.3.0-dev-fork</version>
 
   <parent>
     <groupId>org.apache.jena</groupId>
     <artifactId>jena</artifactId>
-    <version>jena-4.2.0-dev-fork</version>
+    <version>jena-4.3.0-dev-fork</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -41,31 +41,31 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-shacl</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-shex</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-tdb</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-tdb2</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-rdfconnection</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
     </dependency>
 
   </dependencies>

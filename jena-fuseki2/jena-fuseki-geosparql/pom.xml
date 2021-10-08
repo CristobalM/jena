@@ -23,7 +23,7 @@
     <parent>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-fuseki</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <relativePath>../</relativePath>
     </parent>
     
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-geosparql</artifactId>
-            <version>jena-4.2.0-dev-fork</version>
+            <version>jena-4.3.0-dev-fork</version>
         </dependency>
 
         <dependency>
@@ -69,7 +69,7 @@
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-fuseki-main</artifactId>
-            <version>jena-4.2.0-dev-fork</version>
+            <version>jena-4.3.0-dev-fork</version>
         </dependency>
 
         <dependency>
@@ -171,6 +171,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
+                    <source>8</source>
                     <version>true</version>
                     <show>public</show>
                     <quiet>true</quiet>

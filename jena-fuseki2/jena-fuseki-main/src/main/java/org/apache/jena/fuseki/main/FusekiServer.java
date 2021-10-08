@@ -23,7 +23,6 @@ import static org.apache.jena.fuseki.Fuseki.serverLog;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -50,6 +49,7 @@ import org.apache.jena.fuseki.build.FusekiConfig;
 import org.apache.jena.fuseki.ctl.*;
 import org.apache.jena.fuseki.jetty.FusekiErrorHandler;
 import org.apache.jena.fuseki.jetty.JettyLib;
+import org.apache.jena.fuseki.main.cmds.FusekiMain;
 import org.apache.jena.fuseki.metrics.MetricsProviderRegistry;
 import org.apache.jena.fuseki.server.*;
 import org.apache.jena.fuseki.servlets.*;
@@ -75,16 +75,18 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 
 /**
- * Embedded Fuseki server. This is a Fuseki server running with a pre-configured set of
- * datasets and services. There is no admin UI and no security.
+ * Embedded Fuseki server. This is a Fuseki server running with a pre-configured set
+ * of datasets and services. There is no admin UI and no security.
  * <p>
- * To create a embedded sever, use {@link FusekiServer} ({@link #make} is a
- * packaging of a call to {@link FusekiServer} for the case of one dataset,
- * responding to localhost only).
+ * To create a embedded sever, use {@link FusekiServer} ({@link #make} is a packaging
+ * of a call to {@link FusekiServer} for the case of one dataset, responding to
+ * localhost only).
  * <p>
- * The application should call {@link #start()} to actually start the server
- * (it will run in the background : see {@link #join}).
- * <p>Example:
+ * The application should call {@link #start()} to actually start the server (it will
+ * run in the background : see {@link #join}).
+ * <p>
+ * Example:
+ *
  * <pre>
  *      DatasetGraph dsg = ...;
  *      FusekiServer server = FusekiServer.create()
@@ -93,14 +95,28 @@ import org.slf4j.Logger;
  *          .build();
  *       server.start();
  * </pre>
- * Compact form (use the builder pattern above to get more flexibility):
+ * <p>
+ * Supplying a port number of 0, causes the server to allocate a free port and use
+ * that. The actual port can be found with {@link #getPort()}.
+ * <p>
+ * The following {@link #make compact form} builds a server that only responds to localhost traffic:
  * <pre>
  *    FusekiServer.make(1234, "/ds", dsg).start();
  * </pre>
+ * which may be useful for a test server.
  */
 
 public class FusekiServer {
     static { JenaSystem.init(); }
+
+    /**
+     * Construct a Fuseki server from command line arguments.
+     * The return server has not been started.
+     *
+     */
+    static public FusekiServer construct(String... args) {
+        return FusekiMain.build(args);
+    }
 
     /** Construct a Fuseki server for one dataset.
      * It only responds to localhost.
@@ -294,6 +310,10 @@ public class FusekiServer {
             Fuseki.serverLog.info("Start Fuseki (http="+httpPort+")");
         else
             Fuseki.serverLog.info("Start Fuseki");
+
+        // Any post-startup configuration here.
+        // --
+        // Done!
         return this;
     }
 
@@ -328,10 +348,12 @@ public class FusekiServer {
         Logger log = Fuseki.serverLog;
         DataAccessPointRegistry dapRegistery = getDataAccessPointRegistry();
         FusekiInfo.server(log);
-        if ( httpsPort > 0 )
-            log.info("Port = "+httpPort+"/"+httpsPort);
-        else
-            log.info("Port = "+getPort());
+        if ( httpsPort > 0 && httpPort > 0 )
+            log.info("Ports: http="+httpPort+" https="+httpsPort);
+        else if ( httpsPort <= 0 )
+            log.info("Port: http="+getHttpPort());
+        else if ( httpPort <= 0 )
+            log.info("Port: https="+getHttpsPort());
         boolean verbose = Fuseki.getVerbose(getServletContext());
         FusekiInfo.logDataAccessPointRegistry(log, dapRegistery, verbose );
         if ( staticContentDir != null )
@@ -808,7 +830,7 @@ public class FusekiServer {
         private void setHttpsCert(String filename) {
             try {
                 JsonObject httpsConf = JSON.read(filename);
-                Path path = Paths.get(filename).toAbsolutePath();
+                Path path = Path.of(filename).toAbsolutePath();
                 String keystore = httpsConf.get("keystore").getAsString().value();
                 // Resolve relative to the https setup file.
                 this.httpsKeystore = path.getParent().resolve(keystore).toString();

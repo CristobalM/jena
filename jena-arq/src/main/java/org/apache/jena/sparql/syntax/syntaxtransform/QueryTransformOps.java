@@ -18,33 +18,31 @@
 
 package org.apache.jena.sparql.syntax.syntaxtransform;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryVisitor;
 import org.apache.jena.query.SortCondition;
 import org.apache.jena.rdf.model.Literal ;
 import org.apache.jena.rdf.model.RDFNode ;
 import org.apache.jena.rdf.model.Resource ;
+import org.apache.jena.shared.JenaException;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.shared.impl.PrefixMappingImpl;
 import org.apache.jena.sparql.ARQException;
-import org.apache.jena.sparql.core.DatasetDescription;
-import org.apache.jena.sparql.core.Prologue;
-import org.apache.jena.sparql.core.Var;
-import org.apache.jena.sparql.core.VarExprList;
+import org.apache.jena.sparql.core.*;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprTransform;
 import org.apache.jena.sparql.expr.ExprTransformer;
 import org.apache.jena.sparql.expr.ExprVar;
 import org.apache.jena.sparql.graph.NodeTransform;
-import org.apache.jena.sparql.syntax.Element;
-import org.apache.jena.sparql.syntax.ElementData;
-import org.apache.jena.sparql.syntax.ElementGroup;
-import org.apache.jena.sparql.syntax.ElementSubQuery;
+import org.apache.jena.sparql.modify.request.QuadAcc;
+import org.apache.jena.sparql.syntax.*;
 
 /** Support for transformation of query abstract syntax. */
 public class QueryTransformOps {
@@ -66,20 +64,28 @@ public class QueryTransformOps {
         return transform(query, map);
     }
 
-    /** Transform a query using {@link ElementTransform} and {@link ExprTransform}.
-     *  It is the responsibility of these transforms to transform to a legal SPARQL query.
+    /**
+     * Transform a query using {@link ElementTransform} and {@link ExprTransform}.
+     * It is the responsibility of these transforms to transform to a legal SPARQL query.
      */
     public static Query transform(Query query, ElementTransform transform, ExprTransform exprTransform) {
         Query q2 = QueryTransformOps.shallowCopy(query);
-        // "Shallow copy with transform."
         // Mutate the q2 structures which are already allocated and no other code can access yet.
-        mutateVarExprList(q2.getProject(), exprTransform);
+
+        mutateByQueryType(q2, transform, exprTransform);
         mutateVarExprList(q2.getGroupBy(), exprTransform);
         mutateExprList(q2.getHavingExprs(), exprTransform);
-        if (q2.getOrderBy() != null) {
+        if (q2.getOrderBy() != null)
             mutateSortConditions(q2.getOrderBy(), exprTransform);
+        mutateQueryPattern(q2, transform, exprTransform);
+        if ( query.isQueryResultStar() ) {
+            // Reset internal to only what now can be seen.
+            q2.resetResultVars();
         }
+        return q2;
+    }
 
+    private static void mutateQueryPattern(Query q2, ElementTransform transform, ExprTransform exprTransform) {
         Element el = q2.getQueryPattern();
 
         // Explicit null check to prevent warning in ElementTransformer
@@ -100,20 +106,76 @@ public class QueryTransformOps {
                 throw new ARQException("Can't transform a values data block to a different type other than ElementData. "
                         + "Transform yeld type " + Objects.toString(rawElData2.getClass()));
             }
-
             ElementData elData2 = (ElementData)rawElData2;
             q2.setValuesDataBlock(elData2.getVars(), elData2.getRows());
         }
-        if  ( query.isQueryResultStar() ) {
-            // Reset internal to only what now can be seen.
-            q2.resetResultVars();
+    }
+
+    // Do the result form part of the cloned query.
+    private static void mutateByQueryType(Query q2, ElementTransform transform, ExprTransform exprTransform) {
+        switch(q2.queryType()) {
+            case ASK : break;
+            case CONSTRUCT :
+            case CONSTRUCT_QUADS :
+                // Variables in CONSTRUCT template.
+                Template template = q2.getConstructTemplate();
+                QuadAcc acc = new QuadAcc();
+                List<Quad> quads = template.getQuads();
+                template.getQuads().forEach(q->{
+                    Node g = transform(q.getGraph(), exprTransform);
+                    Node s = transform(q.getSubject(), exprTransform);
+                    Node p = transform(q.getPredicate(), exprTransform);
+                    Node o = transform(q.getObject(), exprTransform);
+                    acc.addQuad(Quad.create(g, s, p, o));
+                });
+                Template template2 = new Template(acc);
+                q2.setConstructTemplate(template2);
+                break;
+            case DESCRIBE :
+                // Variables in describe.
+                mutateDescribeVar(q2.getProjectVars(), q2.getResultURIs(), exprTransform);
+                break;
+            case SELECT :
+                mutateVarExprList(q2.getProject(), exprTransform);
+                break;
+            case CONSTRUCT_JSON :
+                throw new UnsupportedOperationException("Transform of JSON template queries");
+            case UNKNOWN :
+                throw new JenaException("Unknown qu ery type");
         }
-        return q2;
     }
 
     public static Query transform(Query query, ElementTransform transform) {
         ExprTransform noop = new ExprTransformApplyElementTransform(transform);
         return transform(query, transform, noop);
+    }
+
+    // Transform CONSTRUCT query template
+    private static void mutateConstruct(Query query, Query query2, ElementTransform transform) {
+        if ( query.isConstructQuad() ) {
+            Template template = query.getConstructTemplate();
+            List<Quad> quads = template.getQuads();
+            QuadAcc accQuads = new QuadAcc();
+            quads.forEach(quad1->{
+                Quad quad2 = transform.transform(quad1);
+                accQuads.addQuad(quad2);
+            });
+            Template template2 = new Template(accQuads);
+            query2.setConstructTemplate(template2);
+            return;
+        }
+        if (query.isConstructType() ) {
+            Template template = query.getConstructTemplate();
+            List<Triple> triples = template.getBGP().getList();
+            BasicPattern accTriple = new BasicPattern();
+            triples.forEach(triple1->{
+                Triple triple2 = transform.transform(triple1);
+                accTriple.add(triple2);
+            });
+            Template template2 = new Template(accTriple);
+            query2.setConstructTemplate(template2);
+            return;
+        }
     }
 
     // ** Mutates the List
@@ -141,6 +203,23 @@ public class QueryTransformOps {
         VarExprList x = transformVarExprList(varExprList, exprTransform);
         varExprList.clear();
         varExprList.addAll(x);
+    }
+
+    private static void mutateDescribeVar(List<Var> varList, List<Node> constants, ExprTransform exprTransform) {
+        List<Var> varList2 = new ArrayList<>(varList.size());
+        for (Var v : varList) {
+            Node n = transform(v, exprTransform);
+            if ( n != v ) {
+                if ( !constants.contains(n) )
+                    constants.add(n);
+                continue;
+            }
+            varList2.add(v);
+        }
+        if ( varList2.size() != varList.size() ) {
+            varList.clear();
+            varList.addAll(varList2);
+        }
     }
 
     private static VarExprList transformVarExprList(VarExprList varExprList, ExprTransform exprTransform) {
@@ -182,6 +261,21 @@ public class QueryTransformOps {
 
         }
         return varExprList2;
+    }
+
+    // Transform a variable node (for low-usage cases).
+    // Returns node object for "no transform"
+    private static Node transform(Node node, ExprTransform exprTransform) {
+        if ( ! Var.isVar(node) )
+            return node;
+        Var v = Var.alloc(node);
+        ExprVar ev = new ExprVar(v);
+        Expr e2 = exprTransform.transform(ev);
+        if (e2 == null || e2 == ev )
+            return node;
+        if ( ! e2.isConstant() )
+            return node ;
+        return e2.getConstant().getNode();
     }
 
     static class QueryShallowCopy implements QueryVisitor {

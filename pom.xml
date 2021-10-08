@@ -23,7 +23,7 @@
   <artifactId>jena</artifactId>
   <packaging>pom</packaging>
   <url>https://jena.apache.org/</url>
-  <version>jena-4.2.0-dev-fork</version>
+  <version>jena-4.3.0-dev-fork</version>
 
   <parent>
     <groupId>org.apache</groupId>
@@ -60,7 +60,8 @@
     <ver.jetty>10.0.6</ver.jetty>
     <ver.shiro>1.8.0</ver.shiro>
 
-    <ver.libthrift>0.14.2</ver.libthrift>
+    <ver.protobuf>3.17.3</ver.protobuf>
+    <ver.libthrift>0.15.0</ver.libthrift>
 
     <!-- jsonld-java depends on depends on Jackson core
          and Jackson databind. databind has had a few CVEs
@@ -86,11 +87,6 @@
 
     <ver.httpclient>4.5.13</ver.httpclient>
     <ver.httpcore>4.4.14</ver.httpcore>
-    <!-- Normally, these are the same as the above
-         In the case of 4.2.6, there isn't a httpcore-osgi.
-    -->
-    <ver.httpcore-osgi>${ver.httpcore}</ver.httpcore-osgi>
-    <ver.httpclient-osgi>${ver.httpclient}</ver.httpclient-osgi>
     
     <ver.lucene>8.8.0</ver.lucene>
     <ver.graalvm>21.2.0</ver.graalvm>
@@ -258,7 +254,6 @@
         <!-- Slow building modules -->
 
         <module>jena-jdbc</module>
-        <module>apache-jena-osgi</module>
       </modules>
     </profile>
   </profiles>
@@ -336,7 +331,14 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-
+      
+      <!-- Protobuf only, not gRPC -->
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${ver.protobuf}</version>
+      </dependency>
+      
       <dependency>
         <groupId>org.apache.thrift</groupId>
         <artifactId>libthrift</artifactId>
@@ -355,6 +357,10 @@
           <exclusion>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -810,7 +816,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.3.1</version>
           <executions>
             <execution>
               <id>attach-javadocs</id>
@@ -843,6 +849,16 @@
                    jena-jdbc
             -->
             <detectJavaApiLink>false</detectJavaApiLink>
+
+            <!-- 
+                 Some modules have source = ${java.version} where they use 
+                 Java 11 features but applying that here causes two kinds of problems.
+                 1/ apache-jena-libs:pom. This artifact as a dependency now causes
+                    an error attaching as a POM.
+                 2/ dependency errors on overlapping packages (which don't appear
+                    to overlap)
+                 3/ Mixed modules and non-module jars (may be the same as 2)
+            -->
             <source>8</source>
             <!-- End Java11 fixes (2021-01) -->
 

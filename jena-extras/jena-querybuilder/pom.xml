@@ -26,7 +26,7 @@
     <groupId>org.apache.jena</groupId>
     <artifactId>jena-extras</artifactId>
     <relativePath>..</relativePath>
-    <version>jena-4.2.0-dev-fork</version>
+    <version>jena-4.3.0-dev-fork</version>
   </parent>
 
   <properties>

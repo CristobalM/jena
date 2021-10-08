@@ -35,6 +35,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
     // Prefix Map implementations
     , TestPrefixMap.class
+    , TestPrefixMapOverPrefixMapping.class
     , TestPrefixMapWrapper.class
     , TestPrefixMapOther.class
 
@@ -46,6 +47,7 @@ import org.junit.runners.Suite.SuiteClasses;
     , TestSerializable.class
     , TestIRIxRIOT.class
     , TestRiotLib.class
+    , TestAsyncParser.class
 })
 
 public class TS_RiotSystem

@@ -22,14 +22,15 @@ import static java.lang.String.format;
 import static org.apache.jena.riot.WebContent.*;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
+import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.atlas.web.AcceptList;
 import org.apache.jena.atlas.web.MediaType;
 import org.apache.jena.fuseki.DEF;
@@ -75,7 +76,7 @@ public class ResponseResultSet
         ResponseOps.put(shortNamesResultSet, contentOutputThrift, contentTypeResultsThrift);
     }
 
-    interface OutputContent { void output(ServletOutputStream out) throws IOException; }
+    interface OutputContent { void output(OutputStream out) throws IOException; }
 
     public static void doResponseResultSet(HttpAction action, Boolean booleanResult) {
         doResponseResultSet$(action, null, booleanResult, null, DEF.rsOfferBoolean);
@@ -89,8 +90,7 @@ public class ResponseResultSet
     private static void doResponseResultSet$(HttpAction action,
                                              ResultSet resultSet, Boolean booleanResult,
                                              Prologue qPrologue, AcceptList contentTypeOffer) {
-        HttpServletRequest request = action.request;
-        HttpServletResponse response = action.response;
+        HttpServletRequest request = action.getRequest();
         long id = action.id;
 
         if ( resultSet == null && booleanResult == null ) {
@@ -165,7 +165,7 @@ public class ResponseResultSet
                 cxt.set(ResultSetWriterXML.xmlStylesheet, stylesheetURL);
         }
         if ( Objects.equals(serializationType, contentTypeResultsJSON) ) {
-            jsonCallback = ResponseOps.paramCallback(action.request);
+            jsonCallback = ResponseOps.paramCallback(action.getRequest());
         }
         if (Objects.equals(serializationType, WebContent.contentTypeResultsThrift) ) {
             if ( booleanResult != null )
@@ -179,7 +179,7 @@ public class ResponseResultSet
 
     private static void textOutput(HttpAction action, String contentType, ResultSet resultSet, Prologue qPrologue, Boolean booleanResult) {
         // Text is not streaming.
-        OutputContent proc = (ServletOutputStream out) -> {
+        OutputContent proc = out -> {
             if ( resultSet != null )
                 ResultSetFormatter.out(out, resultSet, qPrologue);
             if (  booleanResult != null )
@@ -198,20 +198,21 @@ public class ResponseResultSet
             .lang(rsLang)
             .context(context)
             .build();
-        OutputContent proc = (ServletOutputStream out) -> {
+        OutputContent proc = (out) -> {
             if ( callback != null ) {
                 String callbackFunction = callback;
                 callbackFunction = callbackFunction.replace("\r", "");
                 callbackFunction = callbackFunction.replace("\n", "");
-                out.print(callbackFunction);
-                out.println("(");
+                out.write(StrUtils.asUTF8bytes(callbackFunction));
+                out.write('('); out.write('\n');
             }
             if ( resultSet != null )
                 rw.write(out, resultSet);
             if ( booleanResult != null )
                 rw.write(out, booleanResult.booleanValue());
-            if ( callback != null )
-                out.println(")");
+            if ( callback != null ) {
+                out.write(')'); out.write('\n');
+            }
         };
         output(action, contentType, charset, proc);
     }
@@ -221,7 +222,7 @@ public class ResponseResultSet
         try {
             ResponseOps.setHttpResponse(action, contentType, charset);
             ServletOps.success(action);
-            ServletOutputStream out = action.response.getOutputStream();
+            OutputStream out = action.getResponseOutputStream();
             try {
                 proc.output(out);
                 out.flush();
@@ -229,11 +230,13 @@ public class ResponseResultSet
                 // Status code 200 may have already been sent.
                 // We can try to set the HTTP response code anyway.
                 // Breaking the results is the best we can do to indicate the timeout.
-                action.response.setStatus(HttpSC.BAD_REQUEST_400);
+                action.setResponseStatus(HttpSC.BAD_REQUEST_400);
                 action.log.info(format("[%d] Query Cancelled - results truncated (but 200 may have already been sent)", action.id));
-                out.println();
-                out.println("##  Query cancelled due to timeout during execution   ##");
-                out.println("##  ****          Incomplete results           ****   ##");
+                PrintStream ps = new PrintStream(out);
+                ps.println();
+                ps.println("##  Query cancelled due to timeout during execution   ##");
+                ps.println("##  ****          Incomplete results           ****   ##");
+                ps.flush();
                 out.flush();
                 // No point raising an exception - 200 was sent already.
                 //errorOccurred(ex);

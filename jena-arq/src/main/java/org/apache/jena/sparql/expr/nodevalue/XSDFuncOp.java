@@ -623,6 +623,9 @@ public class XSDFuncOp
         if ( x == null )
             // No replacement.
             return nvStr ;
+        if ( x.equals(n) )
+            // No change - return original.
+            return nvStr;
         return calcReturn(x, nvStr.asNode()) ;
     }
 
@@ -634,7 +637,6 @@ public class XSDFuncOp
     // ARQ
 
     private static String replaceAll(Matcher matcher, String rep) {
-        // Follow Java -- return matcher.replaceAll(rep) ;
         try {
             StringBuffer sb = null ;   // Delay until needed
             while(matcher.find()) {
@@ -1496,6 +1498,8 @@ public class XSDFuncOp
     public static NodeValue dtGetYear(NodeValue nv) {
         if ( nv.isDateTime() || nv.isDate() || nv.isGYear() || nv.isGYearMonth() ) {
             DateTimeStruct dts = parseAnyDT(nv) ;
+            if ( dts.neg != null )
+                return NodeValue.makeNode("-"+dts.year, XSDDatatype.XSDinteger) ;
             return NodeValue.makeNode(dts.year, XSDDatatype.XSDinteger) ;
         }
         throw new ExprEvalException("Not a year datatype") ;

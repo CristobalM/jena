@@ -22,11 +22,11 @@
   <parent>
     <groupId>org.apache.jena</groupId>
     <artifactId>jena</artifactId>
-    <version>jena-4.2.0-dev-fork</version>
+    <version>jena-4.3.0-dev-fork</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>jena-shaded-guava</artifactId>
-  <version>jena-4.2.0-dev-fork</version>
+  <version>jena-4.3.0-dev-fork</version>
   <name>Apache Jena - Shadowed external libraries</name>
 
   <description>

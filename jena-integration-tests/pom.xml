@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.apache.jena</groupId>
     <artifactId>jena</artifactId>
-    <version>jena-4.2.0-dev-fork</version>
+    <version>jena-4.3.0-dev-fork</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -41,10 +41,11 @@
   </licenses>
 
   <dependencies>
+
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>apache-jena-libs</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <type>pom</type>
     </dependency>
 
@@ -52,13 +53,13 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-rdfconnection</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-rdfconnection</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -66,14 +67,36 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-cmds</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-cmds</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-fuseki-main</artifactId>
+      <version>jena-4.3.0-dev-fork</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-fuseki-core</artifactId>
+      <version>jena-4.3.0-dev-fork</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-fuseki-main</artifactId>
+      <version>jena-4.3.0-dev-fork</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -82,7 +105,7 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-base</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -90,13 +113,13 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-dboe-index-test</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-dboe-trans-data</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -105,14 +128,14 @@
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-core</artifactId>
       <classifier>tests</classifier>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <scope>test</scope>
     </dependency>    
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-arq</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -120,13 +143,13 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-fuseki-main</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-fuseki-main</artifactId>
-      <version>jena-4.2.0-dev-fork</version>
+      <version>jena-4.3.0-dev-fork</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
