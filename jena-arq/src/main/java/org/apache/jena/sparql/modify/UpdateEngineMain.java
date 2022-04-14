@@ -22,10 +22,12 @@ import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 
 import org.apache.jena.atlas.lib.Sink;
+import org.apache.jena.atlas.lib.tuple.Tuple3;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.DatasetGraph ;
+import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.engine.binding.Binding ;
 import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.sparql.modify.request.UpdateVisitor ;
@@ -84,6 +86,17 @@ public class UpdateEngineMain extends UpdateEngineBase
         return ByteBuffer.wrap(bytesArray).getLong();
     }
 
+
+    private Tuple3<Long> nodeIdsTuple3FromQuad(Quad quad) {
+        return nodeIdsTuple3FromTriple(quad.asTriple());
+    }
+    private Tuple3<Long> nodeIdsTuple3FromTriple(Triple triple) {
+        return TupleFactory.create3(
+                datasetGraph.getNodeIdForNode(triple.getSubject()),
+                datasetGraph.getNodeIdForNode(triple.getPredicate()),
+                datasetGraph.getNodeIdForNode(triple.getObject())
+        );
+    }
     private UpdateSink createUpdateSink() {
         UpdateSink resultingUpdateSink;
         Object cachingUpdaterObj = context.get(ARQConstants.symCachingTriplesUpdater);
@@ -92,19 +105,11 @@ public class UpdateEngineMain extends UpdateEngineBase
             resultingUpdateSink = new UpdateVisitorSink(this.prepareWorker(),
                     sink(quad -> {
                         datasetGraph.add(quad);
-                        Triple triple = quad.asTriple();
-                        long subjectBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getSubject()));
-                        long predicateBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getPredicate()));
-                        long objectBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getObject()));
-                        cachingUpdater.addTriple( TupleFactory.create3(subjectBA, predicateBA, objectBA));
+                        cachingUpdater.addTriple( nodeIdsTuple3FromQuad(quad));
                     }),
                     sink(quad -> {
                         datasetGraph.delete(quad);
-                        Triple triple = quad.asTriple();
-                        long subjectBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getSubject()));
-                        long predicateBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getPredicate()));
-                        long objectBA = byteArrayToLong(datasetGraph.convertToBytesArray(triple.getObject()));
-                        cachingUpdater.deleteTriple(TupleFactory.create3(subjectBA, predicateBA, objectBA));
+                        cachingUpdater.deleteTriple( nodeIdsTuple3FromQuad(quad));
                     }));
         }
         else{
