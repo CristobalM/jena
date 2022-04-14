@@ -257,6 +257,11 @@ public class DatasetGraphTDB extends DatasetGraphTriplesQuads
         return tripleTable.getNodeTupleTable().findNodeIdsLongs(s, p, o);
     }
 
+    @Override
+    public Long getNodeIdForNode(Node node) {
+        return tripleTable.getNodeTupleTable().getNodeTable().getNodeIdForNode(node).getId();
+    }
+
     public Location getLocation()       { return config.location ; }
 
     @Override

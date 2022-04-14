@@ -207,6 +207,11 @@ public class DatasetGraphWrapper implements DatasetGraph, Sync
     }
 
     @Override
+    public Long getNodeIdForNode(Node node) {
+        return getR().getNodeIdForNode(node);
+    }
+
+    @Override
     public Iterator<Quad> find(Quad quad)
     { return getR().find(quad); }
 

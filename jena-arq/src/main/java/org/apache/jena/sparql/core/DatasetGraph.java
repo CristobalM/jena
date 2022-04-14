@@ -124,6 +124,10 @@ public interface DatasetGraph extends Transactional, Closeable
         throw new NotImplemented("findIdsAsLongs not implemented");
     }
 
+    public default Long getNodeIdForNode(Node node){
+        throw new NotImplemented("findIdsAsLongs not implemented");
+    }
+
 
 
     /** Find matching quads in the dataset - may include wildcards, Node.ANY or null
