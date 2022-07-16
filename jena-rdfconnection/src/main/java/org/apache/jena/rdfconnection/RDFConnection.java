@@ -289,9 +289,13 @@ public interface RDFConnection extends
       * @param cachingTriplesUpdater
       */
 
-     public default void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater){
-         update(updateRequest);
-     }
+       public  void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater);
+
+
+
+//     public default void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater){
+//         update(updateRequest);
+//     }
 
 
      /** Execute a SPARQL Update.

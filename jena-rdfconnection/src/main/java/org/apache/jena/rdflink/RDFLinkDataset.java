@@ -33,17 +33,22 @@ import org.apache.jena.rdfconnection.Isolation;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.ARQException;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.DatasetGraphFactory;
 import org.apache.jena.sparql.core.DatasetGraphReadOnly;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.sparql.exec.QueryExec;
 import org.apache.jena.sparql.exec.QueryExecApp;
 import org.apache.jena.sparql.exec.QueryExecBuilder;
 import org.apache.jena.sparql.exec.UpdateExecDatasetBuilder;
 import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.sparql.graph.GraphReadOnly;
+import org.apache.jena.sparql.util.Context;
 import org.apache.jena.system.Txn;
+import org.apache.jena.update.UpdateExecutionFactory;
+import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 
 /**
@@ -96,6 +101,16 @@ public class RDFLinkDataset implements RDFLink {
     public void update(UpdateRequest update) {
         checkOpen();
         Txn.executeWrite(dataset, ()->UpdateExecDatasetBuilder.create().update(update).execute(dataset));
+    }
+
+    @Override
+    public void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater) {
+        checkOpen();
+        Txn.executeWrite(dataset, ()->{
+            UpdateExecDatasetBuilder builder = UpdateExecDatasetBuilder.create();
+            builder.set(ARQConstants.symCachingTriplesUpdater, cachingTriplesUpdater);
+            builder.update(updateRequest).execute(dataset);
+        });
     }
 
     @Override

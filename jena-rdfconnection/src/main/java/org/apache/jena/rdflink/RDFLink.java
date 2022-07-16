@@ -31,6 +31,7 @@ import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Transactional;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.sparql.exec.QueryExec;
 import org.apache.jena.sparql.exec.QueryExecBuilder;
 import org.apache.jena.sparql.exec.RowSet;
@@ -307,6 +308,12 @@ public interface RDFLink extends
      */
     @Override
     public void update(UpdateRequest update);
+    /**
+     * Execute a SPARQL Update with caching updater.
+     * @param updateRequest
+     */
+    public void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater);
+
 
     /**
      * Execute a SPARQL Update.

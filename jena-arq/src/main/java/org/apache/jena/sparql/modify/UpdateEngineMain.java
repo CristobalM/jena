@@ -102,7 +102,8 @@ public class UpdateEngineMain extends UpdateEngineBase
         Object cachingUpdaterObj = context.get(ARQConstants.symCachingTriplesUpdater);
         if(cachingUpdaterObj != null){
             CachingTriplesUpdater cachingUpdater = (CachingTriplesUpdater) cachingUpdaterObj;
-            resultingUpdateSink = new UpdateVisitorSink(this.prepareWorker(),
+            UpdateVisitor resultingVisitor = cachingUpdater.createUpdateVisitorWrapper(this.prepareWorker());
+            resultingUpdateSink = new UpdateVisitorSink(resultingVisitor,
                     sink(quad -> {
                         datasetGraph.add(quad);
                         cachingUpdater.addTriple( nodeIdsTuple3FromQuad(quad));
@@ -114,11 +115,9 @@ public class UpdateEngineMain extends UpdateEngineBase
         }
         else{
             resultingUpdateSink = new UpdateVisitorSink(this.prepareWorker(),
-                    sink(q->datasetGraph.add(q)),
-                    sink(q->datasetGraph.delete(q)));
+                    sink(datasetGraph::add),
+                    sink(datasetGraph::delete));
         }
-
-
         return resultingUpdateSink;
     }
 

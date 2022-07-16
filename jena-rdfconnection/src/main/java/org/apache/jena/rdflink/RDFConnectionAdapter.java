@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.sparql.exec.*;
 import org.apache.jena.update.UpdateRequest;
 
@@ -124,6 +125,11 @@ public class RDFConnectionAdapter implements RDFConnection {
     @Override
     public void update(UpdateRequest update) {
         get().update(update);
+    }
+
+    @Override
+    public void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater) {
+        get().updateWithCachingUpdater(updateRequest, cachingTriplesUpdater);
     }
 
     @Override

@@ -34,6 +34,7 @@ import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.Transactional;
 import org.apache.jena.sparql.core.TransactionalLock;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.sparql.exec.QueryExec;
 import org.apache.jena.sparql.exec.QueryExecApp;
 import org.apache.jena.sparql.exec.QueryExecBuilder;
@@ -337,6 +338,11 @@ public class RDFLinkHTTP implements RDFLink {
     public void update(UpdateRequest update) {
         Objects.requireNonNull(update);
         updateExec(update, null);
+    }
+
+    @Override
+    public void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater) {
+        update(updateRequest);
     }
 
     private void updateExec(UpdateRequest update, String updateString ) {

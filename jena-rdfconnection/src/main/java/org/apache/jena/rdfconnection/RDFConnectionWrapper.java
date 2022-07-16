@@ -20,6 +20,7 @@ package org.apache.jena.rdfconnection;
 
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.update.UpdateRequest;
 
 /** Wrapper for an {@link RDFConnection}. */
@@ -56,6 +57,11 @@ public class RDFConnectionWrapper implements RDFConnection {
     @Override
     public void update(UpdateRequest update) {
         get().update(update);
+    }
+
+    @Override
+    public void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater) {
+        get().updateWithCachingUpdater(updateRequest, cachingTriplesUpdater);
     }
 
     @Override

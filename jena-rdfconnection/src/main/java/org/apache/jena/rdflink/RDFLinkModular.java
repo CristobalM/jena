@@ -25,6 +25,7 @@ import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.TxnType;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.Transactional;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.sparql.exec.QueryExec;
 import org.apache.jena.sparql.exec.QueryExecBuilder;
 import org.apache.jena.update.UpdateRequest;
@@ -98,6 +99,11 @@ public class RDFLinkModular implements RDFLink {
     @Override
     public void update(UpdateRequest update) {
         updateConnection().update(update);
+    }
+
+    @Override
+    public void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater) {
+        update(updateRequest);
     }
 
     @Override

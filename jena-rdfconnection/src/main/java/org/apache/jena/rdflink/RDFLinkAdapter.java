@@ -30,6 +30,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.DatasetGraphZero;
+import org.apache.jena.sparql.engine.main.CachingTriplesUpdater;
 import org.apache.jena.sparql.exec.QueryExec;
 import org.apache.jena.sparql.exec.QueryExecBuilder;
 import org.apache.jena.update.UpdateRequest;
@@ -94,6 +95,11 @@ public class RDFLinkAdapter implements RDFLink {
 
     @Override
     public void update(UpdateRequest update) { throw new NotImplemented("Impleemntation needed");}// UpdateProcessorAdapter.adapt(conn.update(update)); }
+
+    @Override
+    public void updateWithCachingUpdater(UpdateRequest updateRequest, CachingTriplesUpdater cachingTriplesUpdater) {
+        conn.updateWithCachingUpdater(updateRequest, cachingTriplesUpdater);
+    }
 
     @Override
     public void update(String update) { throw new NotImplemented("Impleemntation needed");} //return UpdateProcessorAdapter.adapt(conn.update(update)); }
