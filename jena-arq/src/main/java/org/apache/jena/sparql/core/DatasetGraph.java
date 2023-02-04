@@ -127,6 +127,9 @@ public interface DatasetGraph extends Transactional, Closeable
     public default Long getNodeIdForNode(Node node){
         throw new NotImplemented("findIdsAsLongs not implemented");
     }
+    public default Node getNodeById(Long nodeId){
+        throw new NotImplemented("getNodeById not implemented");
+    }
 
 
 
