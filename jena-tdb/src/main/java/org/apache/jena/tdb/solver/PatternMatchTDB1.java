@@ -30,13 +30,21 @@ import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.impl.IteratorFactory;
+import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.BasicPattern;
 import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ExecutionContext;
 import org.apache.jena.sparql.engine.QueryIterator;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.binding.BindingBuilder;
+import org.apache.jena.sparql.engine.binding.BindingFactory;
 import org.apache.jena.sparql.engine.iterator.Abortable;
 import org.apache.jena.sparql.engine.iterator.QueryIterAbortable;
+import org.apache.jena.sparql.engine.main.BindingStreamTableBGP;
+import org.apache.jena.sparql.engine.main.CachingTriplesConnector;
+import org.apache.jena.sparql.engine.main.NodePatternExport;
 import org.apache.jena.tdb.TDBException;
 import org.apache.jena.tdb.store.DatasetGraphTDB;
 import org.apache.jena.tdb.store.GraphTDB;
@@ -102,21 +110,28 @@ public class PatternMatchTDB1 {
         Iterator<BindingNodeId> chain = Iter.map(input, SolverLibTDB.convFromBinding(nodeTable));
         List<Abortable> killList = new ArrayList<>();
 
-        for ( Triple triple : triples ) {
-            Tuple<Node> patternTuple = null;
-            if ( graphNode == null )
-                // 3-tuples
-                patternTuple = TupleFactory.create3(triple.getSubject(), triple.getPredicate(), triple.getObject());
-            else
-                // 4-tuples.
-                patternTuple = TupleFactory.create4(graphNode, triple.getSubject(), triple.getPredicate(), triple.getObject());
-            // Plain RDF, no RDF-star
-            // chain = solve(nodeTupleTable, tuple, anyGraph, chain, filter, execCxt)
-            // ;
-            // RDF-star SA
-            chain = matchQuadPattern(chain, graphNode, triple, nodeTupleTable, patternTuple, anyGraph, filter, execCxt);
-
+        // Check if the join can be fully resolved on the cache
+        if(canJoinBeProcessedOnCache(nodeTupleTable, triples, execCxt) && filter == null){
+            chain = processOnCache(nodeTupleTable, chain, triples, execCxt);
             chain = makeAbortable(chain, killList);
+        }
+        else {
+            for ( Triple triple : triples ) {
+                Tuple<Node> patternTuple = null;
+                if ( graphNode == null )
+                    // 3-tuples
+                    patternTuple = TupleFactory.create3(triple.getSubject(), triple.getPredicate(), triple.getObject());
+                else
+                    // 4-tuples.
+                    patternTuple = TupleFactory.create4(graphNode, triple.getSubject(), triple.getPredicate(), triple.getObject());
+                // Plain RDF, no RDF-star
+                // chain = solve(nodeTupleTable, tuple, anyGraph, chain, filter, execCxt)
+                // ;
+                // RDF-star SA
+                chain = matchQuadPattern(chain, graphNode, triple, nodeTupleTable, patternTuple, anyGraph, filter, execCxt);
+
+                chain = makeAbortable(chain, killList);
+            }
         }
 
         Iterator<Binding> iterBinding = SolverLibTDB.convertToNodes(chain, nodeTable);
@@ -124,6 +139,98 @@ public class PatternMatchTDB1 {
         // "input" will be closed by QueryIterAbortable but is otherwise unused.
         // "killList" will be aborted on timeout.
         return new QueryIterAbortable(iterBinding, killList, input, execCxt);
+    }
+
+    private static Iterator<BindingNodeId> processOnCache(
+      NodeTupleTable nodeTupleTable,
+      Iterator<BindingNodeId> chain,
+      List<Triple> triples,
+      ExecutionContext execCxt) {
+        CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
+        assert(cachingTriplesConnector != null);
+        return Iter.flatMap(chain, bindingNodeId -> processOnCacheSingleBinding(
+          nodeTupleTable,
+          bindingNodeId,
+          triples,
+          cachingTriplesConnector
+          ));
+    }
+
+    private static Iterator<BindingNodeId> processOnCacheSingleBinding(
+      NodeTupleTable nodeTupleTable,
+      BindingNodeId bindingNodeId,
+      List<Triple> triples,
+      CachingTriplesConnector cachingTriplesConnector
+    ) {
+        List<Tuple<NodePatternExport>> bgp = new ArrayList<>(triples.size());
+        for(Triple triple : triples){
+            NodePatternExport subjectId = toNodePattern(nodeTupleTable, triple.getSubject(), bindingNodeId);
+            NodePatternExport predicateId = toNodePattern(nodeTupleTable, triple.getPredicate(), bindingNodeId);
+            NodePatternExport objectId = toNodePattern(nodeTupleTable, triple.getObject(), bindingNodeId);
+            Tuple<NodePatternExport> pattern = TupleFactory.create3(subjectId, predicateId, objectId);
+            bgp.add(pattern);
+        }
+        BindingStreamTableBGP results = cachingTriplesConnector.accessDataBGP(bgp);
+
+        return Iter.map(results.getResults(),
+          joinSingleResult -> resultRowToBindingNodeId(joinSingleResult, results.getVariableNames()));
+    }
+    private static BindingNodeId resultRowToBindingNodeId(
+      List<Long> results,
+      List<String> variableNames
+    ){
+        assert(results.size() == variableNames.size());
+        BindingNodeId bindingNodeId = new BindingNodeId();
+        for(int i = 0; i < results.size(); i++){
+            Long result = results.get(i);
+            String varName = variableNames.get(i);
+            bindingNodeId.put(Var.alloc(varName), NodeId.create(result));
+        }
+        return bindingNodeId;
+    }
+
+    private static NodePatternExport toNodePattern(
+      NodeTupleTable nodeTupleTable,
+      Node node,
+      BindingNodeId bindingNodeId
+    ){
+        if(node.isVariable()){
+            NodeId resolvedNode = bindingNodeId.get(Var.alloc(node));
+            if(resolvedNode == null){ // binding didnt work
+                return new NodePatternExport(node.getName());
+            }
+            return new NodePatternExport(resolvedNode.getId());
+        }
+        return new NodePatternExport(
+          nodeTupleTable.getNodeTable().getNodeIdForNode(node).getId()
+        );
+    }
+
+    private static boolean canJoinBeProcessedOnCache(
+      NodeTupleTable nodeTupleTable,
+      List<Triple> triples,
+      ExecutionContext execCxt
+    ){
+        CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
+        if(cachingTriplesConnector == null){
+            return false;
+        }
+
+        // Check for variables
+        for(Triple triple : triples){
+            if(triple.getPredicate().isVariable()){
+                return false;
+            }
+        }
+
+        // Transform predicates to nodeIds
+        ArrayList<Long> predicatesNodeIds = new ArrayList<>(triples.size());
+        for(Triple triple : triples){
+            NodeId nodeId = nodeTupleTable.getNodeTable().getNodeIdForNode(triple.getPredicate());
+            predicatesNodeIds.add(nodeId.getId());
+        }
+
+        return cachingTriplesConnector.canRetrieveListOfPredicates(predicatesNodeIds);
     }
 
     private static Iterator<BindingNodeId> matchQuadPattern(Iterator<BindingNodeId> chain, Node graphNode, Triple tPattern,

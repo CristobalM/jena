@@ -60,9 +60,9 @@ class StageMatchTuple {
 
 
         Iterator<Tuple<NodeId>> iterMatches = null;
-        if(cachingEnabled(execCxt)) {
-        	iterMatches = accessFromCaching(ids, execCxt);
-        }
+//        if(cachingEnabled(execCxt)) {
+//        	iterMatches = accessFromCaching(ids, execCxt);
+//        }
         if (iterMatches == null){
         	iterMatches = nodeTupleTable.find(TupleFactory.create(ids));	
         }
