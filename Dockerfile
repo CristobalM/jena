@@ -7,10 +7,6 @@ ENV JAVA_HOME "/usr/lib/jvm/java-11-openjdk-amd64"
 ENV JENA_HOME "/jena-all/jena/apache-jena"
 ENV PATH "$PATH:$JAVA_HOME:$JENA_HOME/bin"
 
-#COPY ./jena-*/ /jena-all/
-#COPY ./apache-jena/ /jena-all/
-#COPY ./apache-jena-*/ /jena-all/
-#COPY pom.xml /jena-all/
 COPY ./ /jena-all/
 
 RUN apt-get update && apt-get install -y ca-certificates wget gnupg2 bash lsb-release software-properties-common
