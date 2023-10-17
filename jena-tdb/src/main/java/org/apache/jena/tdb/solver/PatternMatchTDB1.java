@@ -18,6 +18,7 @@
 
 package org.apache.jena.tdb.solver;
 
+import static org.apache.jena.sparql.ARQConstants.symCachingUsed;
 import static org.apache.jena.sparql.engine.main.solver.SolverLib.makeAbortable;
 
 import java.util.ArrayList;
@@ -211,10 +212,16 @@ public class PatternMatchTDB1 {
       List<Triple> triples,
       ExecutionContext execCxt
     ){
+        if(execCxt.getContext().get(symCachingUsed, false)){
+            return false;
+        }
+
         CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
         if(cachingTriplesConnector == null){
             return false;
         }
+
+        execCxt.getContext().set(symCachingUsed, true);
 
         // Check for variables
         for(Triple triple : triples){

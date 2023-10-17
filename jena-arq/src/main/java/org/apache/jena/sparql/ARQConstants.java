@@ -270,6 +270,8 @@ public class ARQConstants
     public static final Symbol symCachingTriples		= SystemARQ.allocSymbol("cachingTriples");
     public static final Symbol symCachingTriplesUpdater  =
             SystemARQ.allocSymbol("cachingTriplesUpdater");
+    public static final Symbol symCachingUsed  =
+            SystemARQ.allocSymbol("cachingTriplesUsed");
 
     /**
      * Internal use context symbol for an AtomicBoolean to signal that a query has been cancelled.
