@@ -32,13 +32,11 @@ import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Substitute;
 import org.apache.jena.sparql.engine.ExecutionContext;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingFactory;
-import org.apache.jena.sparql.engine.main.CachingTriplesConnector;
 import org.apache.jena.sparql.engine.main.solver.SolverRX4;
 import org.apache.jena.tdb.lib.TupleLib;
 import org.apache.jena.tdb.store.NodeId;
@@ -69,9 +67,6 @@ public class SolverRX {
         // RDF-star <<>> with variables.
         // This path should work regardless.
 
-        boolean isTriple = (patternTuple.len() == 3);
-        NodeTable nodeTable = nodeTupleTable.getNodeTable();
-
         Function<BindingNodeId, Iterator<BindingNodeId>> step =
                 bnid -> find(bnid, nodeTupleTable, graphNode, tPattern, anyGraph, filter, execCxt);
         return Iter.flatMap(chain, step);
@@ -99,40 +94,11 @@ public class SolverRX {
                 : TupleFactory.create4(g,s,p,o);
 
 
+        Iterator<Quad> dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
 
-        CachingTriplesConnector cachingTriplesConnector = execCxt.getContext().get(ARQConstants.symCachingTriples);
-        
-        Iterator<Quad> dsgIter = null;
-        if(cachingTriplesConnector.isCaching()){
-            Tuple<Long> longsTuple = toLongsTuple(tPattern, nodeTable);
-            if(cachingTriplesConnector.canRetrieve(longsTuple)){
-                dsgIter = Iter.map(cachingTriplesConnector.accessData(longsTuple), longTriple -> Quad.create(null, toConcreteTriple(longTriple, nodeTable)));
-            }
-        }
-
-        if(dsgIter == null) {
-            dsgIter = accessData(patternTuple, nodeTupleTable, anyGraph, filter, execCxt);
-        }
 
         Iterator<Binding> matched = Iter.iter(dsgIter).map(dQuad->SolverRX4.matchQuad(input, dQuad, tGraphNode, tPattern)).removeNulls();
         return convFromBinding(matched, nodeTable);
-    }
-
-    private static Triple toConcreteTriple(Tuple<Long> longsTriple, NodeTable nodeTable) {
-        Tuple<Node> nodes = longsTriple.map(longValue -> nodeTable.getNodeForNodeId(NodeId.create(longValue)));
-        return Triple.create(nodes.get(0), nodes.get(1), nodes.get(2));
-    }
-
-    private static Tuple<Long> toLongsTuple(Triple tPattern, NodeTable nodeTable) {
-        return TupleFactory.create3(
-                nodeToLongValue(tPattern.getSubject(), nodeTable),
-                nodeToLongValue(tPattern.getPredicate(), nodeTable),
-                nodeToLongValue(tPattern.getObject(), nodeTable)
-        );
-    }
-
-    private static Long nodeToLongValue(Node node, NodeTable nodeTable) {
-        return nodeTable.getNodeIdForNode(node).getId();
     }
 
 
