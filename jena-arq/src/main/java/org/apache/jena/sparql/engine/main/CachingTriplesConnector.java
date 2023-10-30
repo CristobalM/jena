@@ -11,8 +11,13 @@ public interface CachingTriplesConnector {
 	boolean canRetrieveListOfPredicates(List<Long> predicatesNodeIds);
 
 	Iterator<Tuple<Long>> accessData(Tuple<Long> tPattern);
-	BindingStreamTableBGP accessDataBGP(List<Tuple<NodePatternExport>> bgp);
+	BindingStreamTableBGP accessDataBGP(
+		List<Tuple<NodePatternExport>> bgp,
+		CacheCancellable cacheCancellable,
+		boolean setFirstSmall);
 
 	boolean isCaching();
+
+	boolean useFaster();
 
 }

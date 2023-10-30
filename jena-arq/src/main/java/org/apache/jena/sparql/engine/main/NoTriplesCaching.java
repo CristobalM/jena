@@ -25,13 +25,21 @@ public class NoTriplesCaching implements CachingTriplesConnector {
 	}
 
 	@Override
-	public BindingStreamTableBGP accessDataBGP(List<Tuple<NodePatternExport>> bgp) {
+	public BindingStreamTableBGP accessDataBGP(
+		List<Tuple<NodePatternExport>> bgp,
+		CacheCancellable cacheCancellable,
+		boolean setFirstSmall) {
 		return null;
 	}
 
 	@Override
 	public boolean isCaching() {
 		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean useFaster() {
 		return false;
 	}
 
