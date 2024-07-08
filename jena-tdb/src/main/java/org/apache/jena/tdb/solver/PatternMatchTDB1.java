@@ -288,7 +288,7 @@ public class PatternMatchTDB1 {
             bgp.add(pattern);
         }
 
-        if(cacheCancellable.isCanceled()){
+        if(cacheCancellable != null && cacheCancellable.isCanceled()){
             System.out.println("cache cancelled, aborting");
             return Iter.empty();
         }

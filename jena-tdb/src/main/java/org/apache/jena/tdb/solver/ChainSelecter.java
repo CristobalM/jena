@@ -80,7 +80,9 @@ public class ChainSelecter implements Iterator<BindingNodeId> {
       }
 
       if (status.selected == Selection.JENA) {
-        cacheCancellable.cancel();
+        if(cacheCancellable != null){
+          cacheCancellable.cancel();
+        }
         killListCache.forEach(Abortable::abort);
         elapsedTime = jenaStarter.getTimeElapsed();
         System.out.println("Jena was faster, took " + elapsedTime);
