@@ -23,6 +23,7 @@ import org.apache.jena.atlas.iterator.NullIterator;
 import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeIdData;
 import org.apache.jena.tdb.TDBException;
 import org.apache.jena.tdb.lib.TupleLib;
 import org.apache.jena.tdb.store.NodeId;
@@ -136,6 +137,25 @@ public class NodeTupleTableConcrete implements NodeTupleTable {
         } finally {
             finishRead();
         }
+    }
+
+
+
+    private NodeIdData getFromTuple(Tuple<NodeId> tuple, int index){
+        NodeId nodeId = tuple.get(index);
+        Node node = this.nodeTable.getNodeForNodeId(nodeId);
+        return new NodeIdData(node.toString(), nodeId.getId());
+    }
+    private Tuple<NodeIdData> getTupleNodeIdData(Tuple<NodeId> tuple){
+        return TupleFactory.create3(
+                getFromTuple(tuple, 0),
+                getFromTuple(tuple, 1),
+                getFromTuple(tuple, 2));
+    }
+
+    @Override
+    public Iterator<Tuple<NodeIdData>> findNodeIdData(Node... nodes) {
+        return Iter.map(findAsNodeIds(nodes), this::getTupleNodeIdData);
     }
 
     @Override

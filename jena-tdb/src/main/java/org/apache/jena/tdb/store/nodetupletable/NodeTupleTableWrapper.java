@@ -22,6 +22,7 @@ import java.util.Iterator ;
 
 import org.apache.jena.atlas.lib.tuple.Tuple ;
 import org.apache.jena.graph.Node ;
+import org.apache.jena.graph.NodeIdData;
 import org.apache.jena.tdb.store.NodeId ;
 import org.apache.jena.tdb.store.nodetable.NodeTable ;
 import org.apache.jena.tdb.store.tupletable.TupleTable ;
@@ -58,6 +59,11 @@ public class NodeTupleTableWrapper implements NodeTupleTable
     @Override
     public Iterator<Tuple<Node>> find(Node... nodes)
     { return nodeTupleTable.find(nodes) ; }
+
+    @Override
+    public Iterator<Tuple<NodeIdData>> findNodeIdData(Node... nodes) {
+        return nodeTupleTable.findNodeIdData(nodes);
+    }
 
     @Override
     public Iterator<Tuple<Long>> findNodeIdsLongs(Node... nodes) {

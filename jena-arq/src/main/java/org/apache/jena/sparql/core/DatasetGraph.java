@@ -27,6 +27,7 @@ import org.apache.jena.atlas.lib.NotImplemented;
 import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.graph.Graph ;
 import org.apache.jena.graph.Node ;
+import org.apache.jena.graph.NodeIdData;
 import org.apache.jena.graph.Triple ;
 import org.apache.jena.query.Dataset ;
 import org.apache.jena.riot.system.PrefixMap;
@@ -122,6 +123,9 @@ public interface DatasetGraph extends Transactional, Closeable
 
     public default Iterator<Tuple<Long>> findIdsAsLongs(Node s, Node p, Node o) {
         throw new NotImplemented("findIdsAsLongs not implemented");
+    }
+    public default Iterator<Tuple<NodeIdData>> findNodeIdData(Node s, Node p, Node o) {
+        throw new NotImplemented("findNodeIdData not implemented");
     }
 
     public default Long getNodeIdForNode(Node node){

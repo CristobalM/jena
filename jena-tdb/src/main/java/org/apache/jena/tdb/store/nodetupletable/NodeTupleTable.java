@@ -24,6 +24,7 @@ import org.apache.jena.atlas.lib.Closeable ;
 import org.apache.jena.atlas.lib.Sync ;
 import org.apache.jena.atlas.lib.tuple.Tuple ;
 import org.apache.jena.graph.Node ;
+import org.apache.jena.graph.NodeIdData;
 import org.apache.jena.tdb.store.NodeId ;
 import org.apache.jena.tdb.store.nodetable.NodeTable ;
 import org.apache.jena.tdb.store.tupletable.TupleTable ;
@@ -40,6 +41,8 @@ public interface NodeTupleTable extends Sync, Closeable
 
     /** Find by node. */
     public Iterator<Tuple<Node>> find(Node... nodes) ;
+
+    public Iterator<Tuple<NodeIdData>> findNodeIdData(Node... nodes);
 
     /** Find by node.
      * @return*/
