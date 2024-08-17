@@ -7,6 +7,6 @@ public class NodeIdData {
         this.data = data;
         this.value = value;
     }
-    String getData(){ return data; }
-    long getValue(){ return value; }
+    public String getData(){ return data; }
+    public long getValue(){ return value; }
 }

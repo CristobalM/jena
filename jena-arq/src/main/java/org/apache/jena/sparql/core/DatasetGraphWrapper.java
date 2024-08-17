@@ -24,6 +24,7 @@ import org.apache.jena.atlas.lib.Sync;
 import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeIdData;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.TxnType;
 import org.apache.jena.riot.system.PrefixMap;
@@ -204,6 +205,11 @@ public class DatasetGraphWrapper implements DatasetGraph, Sync
     @Override
     public Iterator<Tuple<Long>> findIdsAsLongs(Node s, Node p, Node o) {
         return getR().findIdsAsLongs(s, p, o);
+    }
+
+    @Override
+    public Iterator<Tuple<NodeIdData>> findNodeIdData(Node s, Node p, Node o) {
+        return getR().findNodeIdData(s, p, o);
     }
 
     @Override
